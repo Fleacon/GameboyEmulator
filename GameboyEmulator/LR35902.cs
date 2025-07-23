@@ -12,4 +12,19 @@ public class LR35902
     private ushort PC;
 
     private Action[] instructionTable = new Action[256];
+
+    public LR35902()
+    {
+        
+    }
+
+    private void initInstructionTable()
+    {
+        instructionTable[0x00] = NOP;
+    }
+    
+    private void NOP()
+    {
+        
+    }
 }

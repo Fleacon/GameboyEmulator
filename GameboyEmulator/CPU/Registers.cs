@@ -57,4 +57,94 @@ public class Registers
         this.cpu = cpu;
     }
 
+    public byte GetR8(byte code)
+    {
+        return code switch
+        {
+            0 => B,
+            1 => C,
+            2 => D,
+            3 => E,
+            4 => H,
+            5 => L,
+            6 => cpu.Bus.Read(HL),
+            7 => A,
+            _ => throw new ArgumentOutOfRangeException(nameof(code), $"Unknown register code: {code}")
+        };
+    }
+
+    public void SetR8(byte code, byte value)
+    {
+        switch (code)
+        {
+            case 0: B = value; break;
+            case 1: C = value; break;
+            case 2: D = value; break;
+            case 3: E = value; break;
+            case 4: H = value; break;
+            case 5: L = value; break;
+            case 6: cpu.Bus.Write(HL, value); break;
+            case 7: A = value; break;
+            default: throw new ArgumentOutOfRangeException(nameof(code), $"Unknown register code: {code}");
+        }
+    }
+
+    public ushort GetR16(byte code) => code switch
+    {
+        0 => BC,
+        1 => DE,
+        2 => HL,
+        3 => SP,
+        _ => throw new ArgumentOutOfRangeException(nameof(code), $"Unknown register code: {code}")
+    };
+
+    public ushort GetR16Stk(byte code) => code switch
+    {
+        0 => BC,
+        1 => DE,
+        2 => HL,
+        3 => AF,
+        _ => throw new ArgumentOutOfRangeException(nameof(code), $"Unknown register code: {code}")
+    };
+
+    public ushort GetR16Mem(byte code)
+    {
+        switch (code)
+        {
+            case 0: return BC;
+            case 1: return DE;
+            case 2: return HL++;  // Post-increment
+            case 3: return HL--;  // Post-decrement
+            default:
+                throw new ArgumentOutOfRangeException(nameof(code), $"Unknown register code: {code}");
+        }
+    }
+    
+    public bool GetCond(byte code) => code switch
+    {
+        0 => !GetFlag(Flags.Z),  // NZ
+        1 => GetFlag(Flags.Z),   // Z
+        2 => !GetFlag(Flags.C),  // NC
+        3 => GetFlag(Flags.C),   // C
+        _ => throw new ArgumentOutOfRangeException(nameof(code), $"Unknown condition code: {code}")
+    };
+    
+    public bool GetFlag(Flags flag) => (F & (byte)flag) != 0;
+
+    public void SetFlag(Flags flag, bool value)
+    {
+        if (value)
+            F |= (byte)flag;
+        else 
+            F &= (byte)~flag;
+    }
+    
+    [Flags]
+    public enum Flags
+    {
+        Z = 0b1000,
+        N = 0b0100,
+        H = 0b0010,
+        C = 0b0001
+    }
 }

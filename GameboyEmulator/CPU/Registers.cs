@@ -5,14 +5,14 @@ namespace GameboyEmulator;
 public class Registers
 {
     private LR35902 cpu;
-    private byte A;
-    private byte B;
-    private byte C;
-    private byte D;
-    private byte E;
-    private byte H;
-    private byte L;
-    private byte F;
+    public byte A { get; set;}
+    public byte B { get; set;}
+    public byte C { get; set;}
+    public byte D { get; set;}
+    public byte E { get; set;}
+    public byte H { get; set;}
+    public byte L { get; set;}
+    public byte F { get; set;}
     
     public ushort PC { get; set; } // Program Counter
     public ushort SP { get; set; } // Stack Pointer

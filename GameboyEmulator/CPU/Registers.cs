@@ -1,16 +1,18 @@
+using System.Collections.ObjectModel;
+
 namespace GameboyEmulator;
 
 public class Registers
 {
     private LR35902 cpu;
-    public byte A { get; set; } // Accumulator
-    public byte B { get; set; }
-    public byte C { get; set; }
-    public byte D { get; set; }
-    public byte E { get; set; }
-    public byte H { get; set; }
-    public byte L { get; set; }
-    public byte F { get; set; }
+    private byte A;
+    private byte B;
+    private byte C;
+    private byte D;
+    private byte E;
+    private byte H;
+    private byte L;
+    private byte F;
     
     public ushort PC { get; set; } // Program Counter
     public ushort SP { get; set; } // Stack Pointer
@@ -57,20 +59,31 @@ public class Registers
         this.cpu = cpu;
     }
 
-    public byte GetR8(byte code)
+    public byte GetR8(byte code, out bool isAddress)
     {
-        return code switch
+        isAddress = false;
+        switch (code)
         {
-            0 => B,
-            1 => C,
-            2 => D,
-            3 => E,
-            4 => H,
-            5 => L,
-            6 => cpu.Bus.Read(HL),
-            7 => A,
-            _ => throw new ArgumentOutOfRangeException(nameof(code), $"Unknown register code: {code}")
-        };
+            case 0:
+                return B;
+            case 1:
+                return C;
+            case 2:
+                return D;
+            case 3:
+                return E;
+            case 4:
+                return H;
+            case 5:
+                return L;
+            case 6:
+                isAddress = true;
+                return cpu.Bus.Read(HL);
+            case 7:
+                return A;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(code), $"Unknown register code: {code}");
+        }
     }
 
     public void SetR8(byte code, byte value)
@@ -83,7 +96,7 @@ public class Registers
             case 3: E = value; break;
             case 4: H = value; break;
             case 5: L = value; break;
-            case 6: cpu.Bus.Write(HL, value); break;
+            case 6: cpu.Bus.Write8(HL, value); break;
             case 7: A = value; break;
             default: throw new ArgumentOutOfRangeException(nameof(code), $"Unknown register code: {code}");
         }
@@ -97,6 +110,19 @@ public class Registers
         3 => SP,
         _ => throw new ArgumentOutOfRangeException(nameof(code), $"Unknown register code: {code}")
     };
+    
+    public void SetR16(byte code, ushort value)
+    {
+        switch (code)
+        {
+            case 0: BC = value; break;
+            case 1: DE = value; break;
+            case 2: HL = value; break;
+            case 3: SP = value; break;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(code), $"Unknown register code: {code}");
+        }
+    }
 
     public ushort GetR16Stk(byte code) => code switch
     {
@@ -107,6 +133,19 @@ public class Registers
         _ => throw new ArgumentOutOfRangeException(nameof(code), $"Unknown register code: {code}")
     };
 
+    public void SetR16Stk(byte code, ushort value)
+    {
+        switch (code)
+        {
+            case 0: BC = value; break;
+            case 1: DE = value; break;
+            case 2: HL = value; break;
+            case 3: AF = value; break;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(code), $"Unknown register code: {code}");
+        }
+    }
+    
     public ushort GetR16Mem(byte code)
     {
         switch (code)
@@ -115,6 +154,19 @@ public class Registers
             case 1: return DE;
             case 2: return HL++;  // Post-increment
             case 3: return HL--;  // Post-decrement
+            default:
+                throw new ArgumentOutOfRangeException(nameof(code), $"Unknown register code: {code}");
+        }
+    }
+    
+    public void SetR16Mem(byte code, ushort value)
+    {
+        switch (code)
+        {
+            case 0: BC = value; break;
+            case 1: DE = value; break;
+            case 2: HL = value; HL++; break; // Post-increment
+            case 3: HL = value; HL--; break; // Post-decrement
             default:
                 throw new ArgumentOutOfRangeException(nameof(code), $"Unknown register code: {code}");
         }
@@ -137,6 +189,18 @@ public class Registers
             F |= (byte)flag;
         else 
             F &= (byte)~flag;
+    }
+
+    public enum RegisterTypes
+    {
+        A = 0,
+        B = 1,
+        C = 2,
+        D = 3,
+        E = 4,
+        H = 5,
+        L = 6,
+        F = 7,
     }
     
     [Flags]

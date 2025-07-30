@@ -59,31 +59,20 @@ public class Registers
         this.cpu = cpu;
     }
 
-    public byte GetR8(byte code, out bool isAddress)
+    public byte GetR8(byte code)
     {
-        isAddress = false;
-        switch (code)
+        return code switch
         {
-            case 0:
-                return B;
-            case 1:
-                return C;
-            case 2:
-                return D;
-            case 3:
-                return E;
-            case 4:
-                return H;
-            case 5:
-                return L;
-            case 6:
-                isAddress = true;
-                return cpu.Bus.Read(HL);
-            case 7:
-                return A;
-            default:
-                throw new ArgumentOutOfRangeException(nameof(code), $"Unknown register code: {code}");
-        }
+            0 => B,
+            1 => C,
+            2 => D,
+            3 => E,
+            4 => H,
+            5 => L,
+            6 => cpu.Bus.Read(HL),
+            7 => A,
+            _ => throw new ArgumentOutOfRangeException(nameof(code), $"Unknown register code: {code}")
+        };
     }
 
     public void SetR8(byte code, byte value)
@@ -154,19 +143,6 @@ public class Registers
             case 1: return DE;
             case 2: return HL++;  // Post-increment
             case 3: return HL--;  // Post-decrement
-            default:
-                throw new ArgumentOutOfRangeException(nameof(code), $"Unknown register code: {code}");
-        }
-    }
-    
-    public void SetR16Mem(byte code, ushort value)
-    {
-        switch (code)
-        {
-            case 0: BC = value; break;
-            case 1: DE = value; break;
-            case 2: HL = value; HL++; break; // Post-increment
-            case 3: HL = value; HL--; break; // Post-decrement
             default:
                 throw new ArgumentOutOfRangeException(nameof(code), $"Unknown register code: {code}");
         }

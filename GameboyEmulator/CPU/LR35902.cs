@@ -38,19 +38,27 @@ public class LR35902
         return 0;
     }
 
+    private ushort R8()
     {
         var code = isCB ? (byte)(opCode & 0b00000111) : (byte)(opCode & 0b00111000 >> 3);
+        var val = Registers.GetR8(code);
         return val;
     }
 
+    private ushort R8R8()
     {
         var code = (byte)(opCode & 0b00000111);
+        var val = Registers.GetR8(code);
         return val;
     }
 
+    private ushort R16MEM()
     {
         var code = (byte)((opCode & 0b00110000) >> 4);
+        return Registers.GetR16Mem(code);
     }
+    
+    private ushort IMM8()
     {
         var val = Bus.Read(Registers.PC);
         Registers.PC++;
@@ -72,6 +80,12 @@ public class LR35902
         return Registers.GetR16(code);
     }
 
+    private ushort R16STK()
+    {
+        var code = (byte)((opCode & 0b00110000) >> 4);
+        return Registers.GetR16Stk(code);
+    }
+    
     {
     }
 

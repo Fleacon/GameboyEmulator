@@ -32,6 +32,15 @@ public class Bus
         if (addr is 0xFFFF)
             IERegister = data;
     }
+    
+    public void Write16(ushort addr, ushort data)
+    {
+        // Write the low byte to the current address
+        Write8(addr, (byte)(data & 0xFF));
+
+        // Write the high byte to the next address
+        Write8((ushort)(addr + 1), (byte)(data >> 8));
+    }
 
     public byte Read(ushort addr)
     {

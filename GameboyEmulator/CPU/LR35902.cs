@@ -27,7 +27,8 @@ public class LR35902
         r8Right = 0b00000111,
         r8Middle = 0b01110000,
         target = 0b00111000,
-        bitIndex = 0b00111000
+        bitIndex = 0b00111000,
+        u3 = 0b01110000
     }
 
     public LR35902(Bus bus)
@@ -230,7 +231,7 @@ public class LR35902
     {
         var regA = Registers.A;
         var bit7 = (regA & 0b10000000) == 0x80;
-        Registers.A = (byte)((regA << 1) | (Registers.GetFlag(Registers.Flags.C) ? 1 : 0));
+        Registers.A = (byte)((regA << 1) | (Registers.GetFlag(Flags.C) ? 1 : 0));
         
         Registers.SetFlag(Flags.Z, false);
         Registers.SetFlag(Flags.N, false);
@@ -242,7 +243,7 @@ public class LR35902
     {
         var regA = Registers.A;
         var bit0 = (regA & 1) == 1;
-        Registers.A = (byte)((regA >> 1) | (Registers.GetFlag(Registers.Flags.C) ? 0x80 : 0));
+        Registers.A = (byte)((regA >> 1) | (Registers.GetFlag(Flags.C) ? 0x80 : 0));
         
         Registers.SetFlag(Flags.Z, false);
         Registers.SetFlag(Flags.N, false);
@@ -605,5 +606,164 @@ public class LR35902
     private void EI()
     {
         IME = true;
+    }
+    
+    // 0xCB prefix
+
+    private void RLC()
+    {
+        var code = util.ReadCode(opCode, Masks.r8Right);
+        var val = Registers.GetR8(code);
+        var bit7 = (val & 0b10000000) == 0x80;
+
+        var result = (byte)((val << 1) | (bit7 ? 1 : 0));
+        Registers.SetR8(code, result);
+        
+        Registers.SetFlag(Flags.Z, result == 0);
+        Registers.SetFlag(Flags.N, false);
+        Registers.SetFlag(Flags.H, false);
+        Registers.SetFlag(Flags.C, bit7);
+    }
+
+    private void RRC()
+    {
+        var code = util.ReadCode(opCode, Masks.r8Right);
+        var val = Registers.GetR8(code);
+        var bit0 = (val & 1) == 1;
+        
+        var result = (byte)((val >> 1) | (bit0 ? 0x80 : 0));
+        Registers.SetR8(code, result);
+        
+        Registers.SetFlag(Flags.Z, result == 0);
+        Registers.SetFlag(Flags.N, false);
+        Registers.SetFlag(Flags.H, false);
+        Registers.SetFlag(Flags.C, bit0);
+    }
+
+    private void RL()
+    {
+        var code = util.ReadCode(opCode, Masks.r8Right);
+        var val = Registers.GetR8(code);
+        var bit7 = (val & 0b10000000) == 0x80;
+        
+        var result = (byte)((val << 1) | (Registers.GetFlag(Flags.C) ? 1 : 0));
+        Registers.SetR8(code, result);
+        
+        Registers.SetFlag(Flags.Z, result == 0);
+        Registers.SetFlag(Flags.N, false);
+        Registers.SetFlag(Flags.H, false);
+        Registers.SetFlag(Flags.C, bit7);
+    }
+
+    private void RR()
+    {
+        var code = util.ReadCode(opCode, Masks.r8Right);
+        var val = Registers.GetR8(code);
+        var bit0 = (val & 1) == 1;
+
+        var result = (byte)((val >> 1) | (Registers.GetFlag(Flags.C) ? 0x80 : 0));
+        Registers.SetR8(code, result);
+        
+        Registers.SetFlag(Flags.Z, result == 0);
+        Registers.SetFlag(Flags.N, false);
+        Registers.SetFlag(Flags.H, false);
+        Registers.SetFlag(Flags.C, bit0);
+    }
+
+    private void SLA()
+    {
+        var code = util.ReadCode(opCode, Masks.r8Right);
+        var val = Registers.GetR8(code);
+        var bit7 = (val & 0b10000000) == 0x80;
+
+        var result = (byte)(val << 1);
+        Registers.SetR8(code, result);
+        
+        Registers.SetFlag(Flags.Z, result == 0);
+        Registers.SetFlag(Flags.N, false);
+        Registers.SetFlag(Flags.H, false);
+        Registers.SetFlag(Flags.C, bit7);
+    }
+
+    private void SRA()
+    {
+        var code = util.ReadCode(opCode, Masks.r8Right);
+        var val = Registers.GetR8(code);
+        var bit0 = (val & 1) == 1;
+        var bit7 = (val & 0b10000000) == 0x80;
+
+        var result = (byte)((val >> 1) | (bit7 ? 0x80 : 0));
+        Registers.SetR8(code, result);
+        
+        Registers.SetFlag(Flags.Z, result == 0);
+        Registers.SetFlag(Flags.N, false);
+        Registers.SetFlag(Flags.H, false);
+        Registers.SetFlag(Flags.C, bit0);
+    }
+
+    private void SWAP()
+    {
+        var code = util.ReadCode(opCode, Masks.r8Right);
+        var val = Registers.GetR8(code);
+
+        var hi = (byte)((val & 0xF0) >> 4);
+        var lo = (byte)(val & 0x0F);
+        var result = (byte)((lo << 4) | hi);
+        Registers.SetR8(code, result);
+        
+        Registers.SetFlag(Flags.Z, result == 0);
+        Registers.SetFlag(Flags.N, false);
+        Registers.SetFlag(Flags.H, false);
+        Registers.SetFlag(Flags.C, false);
+    }
+
+    private void SRL()
+    {
+        var code = util.ReadCode(opCode, Masks.r8Right);
+        var val = Registers.GetR8(code);
+        var bit0 = (val & 1) == 1;
+
+        var result = (byte)(val >> 1);
+        Registers.SetR8(code, result);
+        
+        Registers.SetFlag(Flags.Z, result == 0);
+        Registers.SetFlag(Flags.N, false);
+        Registers.SetFlag(Flags.H, false);
+        Registers.SetFlag(Flags.C, bit0);
+    }
+
+    private void BIT()
+    {
+        var code = util.ReadCode(opCode, Masks.r8Right);
+        var val = Registers.GetR8(code);
+        var index = util.ReadCode(opCode, Masks.u3);
+        
+        var isSet = ((val >> index) & 0x01) == 1;
+        
+        Registers.SetFlag(Flags.Z, !isSet);
+        Registers.SetFlag(Flags.N, false);
+        Registers.SetFlag(Flags.H, true);
+    }
+
+    private void RES()
+    {
+        var code = util.ReadCode(opCode, Masks.r8Right);
+        var val = Registers.GetR8(code);
+        var index = util.ReadCode(opCode, Masks.u3);
+
+        var newVal = (byte)(~(0x01 << index) & val);
+        
+        Registers.SetR8(code, newVal);
+    }
+
+    private void SET()
+    {
+        var code = util.ReadCode(opCode, Masks.r8Right);
+        var val = Registers.GetR8(code);
+        var index = util.ReadCode(opCode, Masks.u3);
+
+        var newVal = (byte)((0x01 << index) | val);
+        
+        Registers.SetR8(code, newVal);
     }
 }

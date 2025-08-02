@@ -512,3 +512,6 @@ $RECYCLE.BIN/
 # End of https://www.toptal.com/developers/gitignore/api/csharp,rider,windows,dotnetcore
 /GameboyEmulator/obj
 /GameboyEmulator/obj
+
+
+/GameboyEmulator/roms

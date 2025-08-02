@@ -58,6 +58,7 @@ public class Registers
     public Registers(LR35902 cpu)
     {
         this.cpu = cpu;
+        initStartingValues();
     }
 
     public byte GetR8(byte code)
@@ -187,5 +188,22 @@ public class Registers
         N = 0b0100,
         H = 0b0010,
         C = 0b0001
+    }
+
+    private void initStartingValues()
+    {
+        A = 0x01;
+        SetFlag(Flags.Z, true);
+        SetFlag(Flags.N, false);
+        SetFlag(Flags.H, false); // TODO: if Cartridge header checksum is 0x00 then clear else set
+        SetFlag(Flags.C, false); // TODO: if Cartridge header checksum is 0x00 then clear else set
+        B = 0x00;
+        C = 0x13;
+        D = 0x00;
+        E = 0xD8;
+        H = 0x01;
+        L = 0x4D;
+        PC = 0x0100;
+        SP = 0xFFFE;
     }
 }

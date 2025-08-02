@@ -168,18 +168,6 @@ public class Registers
         else 
             F &= (byte)~flag;
     }
-
-    public enum RegisterTypes
-    {
-        A = 0,
-        B = 1,
-        C = 2,
-        D = 3,
-        E = 4,
-        H = 5,
-        L = 6,
-        F = 7,
-    }
     
     [Flags]
     public enum Flags

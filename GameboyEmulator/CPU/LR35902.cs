@@ -54,27 +54,77 @@ public class LR35902
     {
         if (cycles == 0)
         {
+            if (isHalted)
+            {
+                cycles = 2;
+            }
+            
             opCode = Bus.Read(Registers.PC);
+            Console.Write($"PC: {Registers.PC:X4}, ");
             Registers.PC++;
             
-            var ins = instructions[opCode];
+            var ins = !isCB ? instructions[opCode] : cbInstructions[opCode];
+            Console.Write($"ins: {ins.Name}, ");
             
-            fetched = instructions[opCode].AddressingMode();
-
+            fetched = ins.AddressingMode();
+            Console.WriteLine($"fetched: {fetched:X4}");
+            
             ins.Typ();
             
             cycles = withBranch ? ins.CyclesBranch : ins.Cycles;
             withBranch = false;
+            
+            if (checkInterrupt(out Interrupts interrupt))
+                handleInterrupt(interrupt);
         }
+        cycles--;
     }
 
-    private void initInstructionArray()
+    private bool checkInterrupt(out Interrupts interrupt)
     {
-        instructions[0x00] = new("NOP", NOP, IMP, 1);
-        instructions[0x01] = new("LD BC, u16", LD_r16, fetchIMM16, 3);
-        instructions[0x02] = new("LD (BC), A", LD_r16mem, fetchR16MEM, 2);
-        instructions[0x03] = new("INC BC", INC_R8, fetchR16, 2);
-        instructions[0x04] = new("INC B", INC_R8, fetchR8, 1);
+        var IE = Bus.Read(0xFFFF);
+        var IF = Bus.Read(0xFF0F);
+        var interrupts = (IE & 0x1F) & (IF & 0x1F);
+        
+        if (interrupts != 0 && IME)
+        {
+            var mask = 0x01;
+            var temp = interrupts;
+            int i;
+            for (i = 0; i < 5; i++)
+            {
+                if ((temp & 0x01) == 0x01)
+                    break;
+                mask = mask << 1;
+                temp = temp >> 1;
+            }
+            IME = false;
+            Bus.Write8(0xFF0F, (byte)(interrupts & ~mask));
+            interrupt = (Interrupts)i;
+            return true;
+        }
+
+        interrupt = Interrupts.NONE;
+        return false;
+    }
+
+    private void handleInterrupt(Interrupts interrupt)
+    {
+        isHalted = false;
+        
+        Registers.SP -= 2;
+        Bus.Write16(Registers.SP, Registers.PC);
+
+        Registers.PC = interrupt switch
+        {
+            Interrupts.VBlank => 0x40,
+            Interrupts.LCD => 0x48,
+            Interrupts.Timer => 0x50,
+            Interrupts.Serial => 0x58,
+            Interrupts.Joypad => 0x60,
+            _ => throw new Exception("INVALID INTERRUPT"),
+        };
+        cycles = 5;
     }
     
     // Addressing Modes
@@ -335,7 +385,14 @@ public class LR35902
 
     private void HALT()
     {
-        // TODO: Implement HALT
+        isHalted = true;
+        
+        var IE = Bus.Read(0xFFFF);
+        var IF = Bus.Read(0xFF0F);
+        if (!IME && (IE & IF & 0x1F) != 0) // Hardware Bug
+        {
+            Registers.PC--;
+        }
     }
 
     private void ADD()

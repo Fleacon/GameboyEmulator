@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using GameboyEmulator.CPU;
 
 namespace GameboyEmulator;
 

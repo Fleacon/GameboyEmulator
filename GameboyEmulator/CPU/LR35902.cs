@@ -1,6 +1,7 @@
 using static GameboyEmulator.Registers;
 
 namespace GameboyEmulator;
+namespace GameboyEmulator.CPU;
 
 public class LR35902
 {

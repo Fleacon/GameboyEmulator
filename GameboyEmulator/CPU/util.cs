@@ -1,5 +1,5 @@
 using System.Numerics;
-using static GameboyEmulator.LR35902;
+using static GameboyEmulator.CPU.LR35902;
 
 namespace GameboyEmulator;
 

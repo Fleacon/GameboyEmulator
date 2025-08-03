@@ -1173,6 +1173,292 @@ public class LR35902
     
     private void initCBInstructionArray()
     {
-        
+        // 0x00-0x0F: RLC r8
+        cbInstructions[0x00] = new("RLC B", RLC, fetchR8, 2);
+        cbInstructions[0x01] = new("RLC C", RLC, fetchR8, 2);
+        cbInstructions[0x02] = new("RLC D", RLC, fetchR8, 2);
+        cbInstructions[0x03] = new("RLC E", RLC, fetchR8, 2);
+        cbInstructions[0x04] = new("RLC H", RLC, fetchR8, 2);
+        cbInstructions[0x05] = new("RLC L", RLC, fetchR8, 2);
+        cbInstructions[0x06] = new("RLC (HL)", RLC, fetchR8, 4);
+        cbInstructions[0x07] = new("RLC A", RLC, fetchR8, 2);
+        cbInstructions[0x08] = new("RRC B", RRC, fetchR8, 2);
+        cbInstructions[0x09] = new("RRC C", RRC, fetchR8, 2);
+        cbInstructions[0x0A] = new("RRC D", RRC, fetchR8, 2);
+        cbInstructions[0x0B] = new("RRC E", RRC, fetchR8, 2);
+        cbInstructions[0x0C] = new("RRC H", RRC, fetchR8, 2);
+        cbInstructions[0x0D] = new("RRC L", RRC, fetchR8, 2);
+        cbInstructions[0x0E] = new("RRC (HL)", RRC, fetchR8, 4);
+        cbInstructions[0x0F] = new("RRC A", RRC, fetchR8, 2);
+
+        // 0x10-0x1F: RL r8
+        cbInstructions[0x10] = new("RL B", RL, fetchR8, 2);
+        cbInstructions[0x11] = new("RL C", RL, fetchR8, 2);
+        cbInstructions[0x12] = new("RL D", RL, fetchR8, 2);
+        cbInstructions[0x13] = new("RL E", RL, fetchR8, 2);
+        cbInstructions[0x14] = new("RL H", RL, fetchR8, 2);
+        cbInstructions[0x15] = new("RL L", RL, fetchR8, 2);
+        cbInstructions[0x16] = new("RL (HL)", RL, fetchR8, 4);
+        cbInstructions[0x17] = new("RL A", RL, fetchR8, 2);
+        cbInstructions[0x18] = new("RR B", RR, fetchR8, 2);
+        cbInstructions[0x19] = new("RR C", RR, fetchR8, 2);
+        cbInstructions[0x1A] = new("RR D", RR, fetchR8, 2);
+        cbInstructions[0x1B] = new("RR E", RR, fetchR8, 2);
+        cbInstructions[0x1C] = new("RR H", RR, fetchR8, 2);
+        cbInstructions[0x1D] = new("RR L", RR, fetchR8, 2);
+        cbInstructions[0x1E] = new("RR (HL)", RR, fetchR8, 4);
+        cbInstructions[0x1F] = new("RR A", RR, fetchR8, 2);
+
+        // 0x20-0x2F: SLA r8
+        cbInstructions[0x20] = new("SLA B", SLA, fetchR8, 2);
+        cbInstructions[0x21] = new("SLA C", SLA, fetchR8, 2);
+        cbInstructions[0x22] = new("SLA D", SLA, fetchR8, 2);
+        cbInstructions[0x23] = new("SLA E", SLA, fetchR8, 2);
+        cbInstructions[0x24] = new("SLA H", SLA, fetchR8, 2);
+        cbInstructions[0x25] = new("SLA L", SLA, fetchR8, 2);
+        cbInstructions[0x26] = new("SLA (HL)", SLA, fetchR8, 4);
+        cbInstructions[0x27] = new("SLA A", SLA, fetchR8, 2);
+        cbInstructions[0x28] = new("SRA B", SRA, fetchR8, 2);
+        cbInstructions[0x29] = new("SRA C", SRA, fetchR8, 2);
+        cbInstructions[0x2A] = new("SRA D", SRA, fetchR8, 2);
+        cbInstructions[0x2B] = new("SRA E", SRA, fetchR8, 2);
+        cbInstructions[0x2C] = new("SRA H", SRA, fetchR8, 2);
+        cbInstructions[0x2D] = new("SRA L", SRA, fetchR8, 2);
+        cbInstructions[0x2E] = new("SRA (HL)", SRA, fetchR8, 4);
+        cbInstructions[0x2F] = new("SRA A", SRA, fetchR8, 2);
+
+        // 0x30-0x3F: SWAP r8 and SRL r8
+        cbInstructions[0x30] = new("SWAP B", SWAP, fetchR8, 2);
+        cbInstructions[0x31] = new("SWAP C", SWAP, fetchR8, 2);
+        cbInstructions[0x32] = new("SWAP D", SWAP, fetchR8, 2);
+        cbInstructions[0x33] = new("SWAP E", SWAP, fetchR8, 2);
+        cbInstructions[0x34] = new("SWAP H", SWAP, fetchR8, 2);
+        cbInstructions[0x35] = new("SWAP L", SWAP, fetchR8, 2);
+        cbInstructions[0x36] = new("SWAP (HL)", SWAP, fetchR8, 4);
+        cbInstructions[0x37] = new("SWAP A", SWAP, fetchR8, 2);
+        cbInstructions[0x38] = new("SRL B", SRL, fetchR8, 2);
+        cbInstructions[0x39] = new("SRL C", SRL, fetchR8, 2);
+        cbInstructions[0x3A] = new("SRL D", SRL, fetchR8, 2);
+        cbInstructions[0x3B] = new("SRL E", SRL, fetchR8, 2);
+        cbInstructions[0x3C] = new("SRL H", SRL, fetchR8, 2);
+        cbInstructions[0x3D] = new("SRL L", SRL, fetchR8, 2);
+        cbInstructions[0x3E] = new("SRL (HL)", SRL, fetchR8, 4);
+        cbInstructions[0x3F] = new("SRL A", SRL, fetchR8, 2);
+
+        // 0x40-0x4F: BIT 0, r8
+        cbInstructions[0x40] = new("BIT 0, B", BIT, fetchR8, 2);
+        cbInstructions[0x41] = new("BIT 0, C", BIT, fetchR8, 2);
+        cbInstructions[0x42] = new("BIT 0, D", BIT, fetchR8, 2);
+        cbInstructions[0x43] = new("BIT 0, E", BIT, fetchR8, 2);
+        cbInstructions[0x44] = new("BIT 0, H", BIT, fetchR8, 2);
+        cbInstructions[0x45] = new("BIT 0, L", BIT, fetchR8, 2);
+        cbInstructions[0x46] = new("BIT 0, (HL)", BIT, fetchR8, 3);
+        cbInstructions[0x47] = new("BIT 0, A", BIT, fetchR8, 2);
+        cbInstructions[0x48] = new("BIT 1, B", BIT, fetchR8, 2);
+        cbInstructions[0x49] = new("BIT 1, C", BIT, fetchR8, 2);
+        cbInstructions[0x4A] = new("BIT 1, D", BIT, fetchR8, 2);
+        cbInstructions[0x4B] = new("BIT 1, E", BIT, fetchR8, 2);
+        cbInstructions[0x4C] = new("BIT 1, H", BIT, fetchR8, 2);
+        cbInstructions[0x4D] = new("BIT 1, L", BIT, fetchR8, 2);
+        cbInstructions[0x4E] = new("BIT 1, (HL)", BIT, fetchR8, 3);
+        cbInstructions[0x4F] = new("BIT 1, A", BIT, fetchR8, 2);
+
+        // 0x50-0x5F: BIT 2, r8
+        cbInstructions[0x50] = new("BIT 2, B", BIT, fetchR8, 2);
+        cbInstructions[0x51] = new("BIT 2, C", BIT, fetchR8, 2);
+        cbInstructions[0x52] = new("BIT 2, D", BIT, fetchR8, 2);
+        cbInstructions[0x53] = new("BIT 2, E", BIT, fetchR8, 2);
+        cbInstructions[0x54] = new("BIT 2, H", BIT, fetchR8, 2);
+        cbInstructions[0x55] = new("BIT 2, L", BIT, fetchR8, 2);
+        cbInstructions[0x56] = new("BIT 2, (HL)", BIT, fetchR8, 3);
+        cbInstructions[0x57] = new("BIT 2, A", BIT, fetchR8, 2);
+        cbInstructions[0x58] = new("BIT 3, B", BIT, fetchR8, 2);
+        cbInstructions[0x59] = new("BIT 3, C", BIT, fetchR8, 2);
+        cbInstructions[0x5A] = new("BIT 3, D", BIT, fetchR8, 2);
+        cbInstructions[0x5B] = new("BIT 3, E", BIT, fetchR8, 2);
+        cbInstructions[0x5C] = new("BIT 3, H", BIT, fetchR8, 2);
+        cbInstructions[0x5D] = new("BIT 3, L", BIT, fetchR8, 2);
+        cbInstructions[0x5E] = new("BIT 3, (HL)", BIT, fetchR8, 3);
+        cbInstructions[0x5F] = new("BIT 3, A", BIT, fetchR8, 2);
+
+        // 0x60-0x6F: BIT 4, r8
+        cbInstructions[0x60] = new("BIT 4, B", BIT, fetchR8, 2);
+        cbInstructions[0x61] = new("BIT 4, C", BIT, fetchR8, 2);
+        cbInstructions[0x62] = new("BIT 4, D", BIT, fetchR8, 2);
+        cbInstructions[0x63] = new("BIT 4, E", BIT, fetchR8, 2);
+        cbInstructions[0x64] = new("BIT 4, H", BIT, fetchR8, 2);
+        cbInstructions[0x65] = new("BIT 4, L", BIT, fetchR8, 2);
+        cbInstructions[0x66] = new("BIT 4, (HL)", BIT, fetchR8, 3);
+        cbInstructions[0x67] = new("BIT 4, A", BIT, fetchR8, 2);
+        cbInstructions[0x68] = new("BIT 5, B", BIT, fetchR8, 2);
+        cbInstructions[0x69] = new("BIT 5, C", BIT, fetchR8, 2);
+        cbInstructions[0x6A] = new("BIT 5, D", BIT, fetchR8, 2);
+        cbInstructions[0x6B] = new("BIT 5, E", BIT, fetchR8, 2);
+        cbInstructions[0x6C] = new("BIT 5, H", BIT, fetchR8, 2);
+        cbInstructions[0x6D] = new("BIT 5, L", BIT, fetchR8, 2);
+        cbInstructions[0x6E] = new("BIT 5, (HL)", BIT, fetchR8, 3);
+        cbInstructions[0x6F] = new("BIT 5, A", BIT, fetchR8, 2);
+
+        // 0x70-0x7F: BIT 6, r8 and BIT 7, r8
+        cbInstructions[0x70] = new("BIT 6, B", BIT, fetchR8, 2);
+        cbInstructions[0x71] = new("BIT 6, C", BIT, fetchR8, 2);
+        cbInstructions[0x72] = new("BIT 6, D", BIT, fetchR8, 2);
+        cbInstructions[0x73] = new("BIT 6, E", BIT, fetchR8, 2);
+        cbInstructions[0x74] = new("BIT 6, H", BIT, fetchR8, 2);
+        cbInstructions[0x75] = new("BIT 6, L", BIT, fetchR8, 2);
+        cbInstructions[0x76] = new("BIT 6, (HL)", BIT, fetchR8, 3);
+        cbInstructions[0x77] = new("BIT 6, A", BIT, fetchR8, 2);
+        cbInstructions[0x78] = new("BIT 7, B", BIT, fetchR8, 2);
+        cbInstructions[0x79] = new("BIT 7, C", BIT, fetchR8, 2);
+        cbInstructions[0x7A] = new("BIT 7, D", BIT, fetchR8, 2);
+        cbInstructions[0x7B] = new("BIT 7, E", BIT, fetchR8, 2);
+        cbInstructions[0x7C] = new("BIT 7, H", BIT, fetchR8, 2);
+        cbInstructions[0x7D] = new("BIT 7, L", BIT, fetchR8, 2);
+        cbInstructions[0x7E] = new("BIT 7, (HL)", BIT, fetchR8, 3);
+        cbInstructions[0x7F] = new("BIT 7, A", BIT, fetchR8, 2);
+
+        // 0x80-0x8F: RES 0, r8
+        cbInstructions[0x80] = new("RES 0, B", RES, fetchR8, 2);
+        cbInstructions[0x81] = new("RES 0, C", RES, fetchR8, 2);
+        cbInstructions[0x82] = new("RES 0, D", RES, fetchR8, 2);
+        cbInstructions[0x83] = new("RES 0, E", RES, fetchR8, 2);
+        cbInstructions[0x84] = new("RES 0, H", RES, fetchR8, 2);
+        cbInstructions[0x85] = new("RES 0, L", RES, fetchR8, 2);
+        cbInstructions[0x86] = new("RES 0, (HL)", RES, fetchR8, 4);
+        cbInstructions[0x87] = new("RES 0, A", RES, fetchR8, 2);
+        cbInstructions[0x88] = new("RES 1, B", RES, fetchR8, 2);
+        cbInstructions[0x89] = new("RES 1, C", RES, fetchR8, 2);
+        cbInstructions[0x8A] = new("RES 1, D", RES, fetchR8, 2);
+        cbInstructions[0x8B] = new("RES 1, E", RES, fetchR8, 2);
+        cbInstructions[0x8C] = new("RES 1, H", RES, fetchR8, 2);
+        cbInstructions[0x8D] = new("RES 1, L", RES, fetchR8, 2);
+        cbInstructions[0x8E] = new("RES 1, (HL)", RES, fetchR8, 4);
+        cbInstructions[0x8F] = new("RES 1, A", RES, fetchR8, 2);
+
+        // 0x90-0x9F: RES 2, r8
+        cbInstructions[0x90] = new("RES 2, B", RES, fetchR8, 2);
+        cbInstructions[0x91] = new("RES 2, C", RES, fetchR8, 2);
+        cbInstructions[0x92] = new("RES 2, D", RES, fetchR8, 2);
+        cbInstructions[0x93] = new("RES 2, E", RES, fetchR8, 2);
+        cbInstructions[0x94] = new("RES 2, H", RES, fetchR8, 2);
+        cbInstructions[0x95] = new("RES 2, L", RES, fetchR8, 2);
+        cbInstructions[0x96] = new("RES 2, (HL)", RES, fetchR8, 4);
+        cbInstructions[0x97] = new("RES 2, A", RES, fetchR8, 2);
+        cbInstructions[0x98] = new("RES 3, B", RES, fetchR8, 2);
+        cbInstructions[0x99] = new("RES 3, C", RES, fetchR8, 2);
+        cbInstructions[0x9A] = new("RES 3, D", RES, fetchR8, 2);
+        cbInstructions[0x9B] = new("RES 3, E", RES, fetchR8, 2);
+        cbInstructions[0x9C] = new("RES 3, H", RES, fetchR8, 2);
+        cbInstructions[0x9D] = new("RES 3, L", RES, fetchR8, 2);
+        cbInstructions[0x9E] = new("RES 3, (HL)", RES, fetchR8, 4);
+        cbInstructions[0x9F] = new("RES 3, A", RES, fetchR8, 2);
+
+        // 0xA0-0xAF: RES 4, r8
+        cbInstructions[0xA0] = new("RES 4, B", RES, fetchR8, 2);
+        cbInstructions[0xA1] = new("RES 4, C", RES, fetchR8, 2);
+        cbInstructions[0xA2] = new("RES 4, D", RES, fetchR8, 2);
+        cbInstructions[0xA3] = new("RES 4, E", RES, fetchR8, 2);
+        cbInstructions[0xA4] = new("RES 4, H", RES, fetchR8, 2);
+        cbInstructions[0xA5] = new("RES 4, L", RES, fetchR8, 2);
+        cbInstructions[0xA6] = new("RES 4, (HL)", RES, fetchR8, 4);
+        cbInstructions[0xA7] = new("RES 4, A", RES, fetchR8, 2);
+        cbInstructions[0xA8] = new("RES 5, B", RES, fetchR8, 2);
+        cbInstructions[0xA9] = new("RES 5, C", RES, fetchR8, 2);
+        cbInstructions[0xAA] = new("RES 5, D", RES, fetchR8, 2);
+        cbInstructions[0xAB] = new("RES 5, E", RES, fetchR8, 2);
+        cbInstructions[0xAC] = new("RES 5, H", RES, fetchR8, 2);
+        cbInstructions[0xAD] = new("RES 5, L", RES, fetchR8, 2);
+        cbInstructions[0xAE] = new("RES 5, (HL)", RES, fetchR8, 4);
+        cbInstructions[0xAF] = new("RES 5, A", RES, fetchR8, 2);
+
+        // 0xB0-0xBF: RES 6, r8 and RES 7, r8
+        cbInstructions[0xB0] = new("RES 6, B", RES, fetchR8, 2);
+        cbInstructions[0xB1] = new("RES 6, C", RES, fetchR8, 2);
+        cbInstructions[0xB2] = new("RES 6, D", RES, fetchR8, 2);
+        cbInstructions[0xB3] = new("RES 6, E", RES, fetchR8, 2);
+        cbInstructions[0xB4] = new("RES 6, H", RES, fetchR8, 2);
+        cbInstructions[0xB5] = new("RES 6, L", RES, fetchR8, 2);
+        cbInstructions[0xB6] = new("RES 6, (HL)", RES, fetchR8, 4);
+        cbInstructions[0xB7] = new("RES 6, A", RES, fetchR8, 2);
+        cbInstructions[0xB8] = new("RES 7, B", RES, fetchR8, 2);
+        cbInstructions[0xB9] = new("RES 7, C", RES, fetchR8, 2);
+        cbInstructions[0xBA] = new("RES 7, D", RES, fetchR8, 2);
+        cbInstructions[0xBB] = new("RES 7, E", RES, fetchR8, 2);
+        cbInstructions[0xBC] = new("RES 7, H", RES, fetchR8, 2);
+        cbInstructions[0xBD] = new("RES 7, L", RES, fetchR8, 2);
+        cbInstructions[0xBE] = new("RES 7, (HL)", RES, fetchR8, 4);
+        cbInstructions[0xBF] = new("RES 7, A", RES, fetchR8, 2);
+
+        // 0xC0-0xCF: SET 0, r8
+        cbInstructions[0xC0] = new("SET 0, B", SET, fetchR8, 2);
+        cbInstructions[0xC1] = new("SET 0, C", SET, fetchR8, 2);
+        cbInstructions[0xC2] = new("SET 0, D", SET, fetchR8, 2);
+        cbInstructions[0xC3] = new("SET 0, E", SET, fetchR8, 2);
+        cbInstructions[0xC4] = new("SET 0, H", SET, fetchR8, 2);
+        cbInstructions[0xC5] = new("SET 0, L", SET, fetchR8, 2);
+        cbInstructions[0xC6] = new("SET 0, (HL)", SET, fetchR8, 4);
+        cbInstructions[0xC7] = new("SET 0, A", SET, fetchR8, 2);
+        cbInstructions[0xC8] = new("SET 1, B", SET, fetchR8, 2);
+        cbInstructions[0xC9] = new("SET 1, C", SET, fetchR8, 2);
+        cbInstructions[0xCA] = new("SET 1, D", SET, fetchR8, 2);
+        cbInstructions[0xCB] = new("SET 1, E", SET, fetchR8, 2);
+        cbInstructions[0xCC] = new("SET 1, H", SET, fetchR8, 2);
+        cbInstructions[0xCD] = new("SET 1, L", SET, fetchR8, 2);
+        cbInstructions[0xCE] = new("SET 1, (HL)", SET, fetchR8, 4);
+        cbInstructions[0xCF] = new("SET 1, A", SET, fetchR8, 2);
+
+        // 0xD0-0xDF: SET 2, r8
+        cbInstructions[0xD0] = new("SET 2, B", SET, fetchR8, 2);
+        cbInstructions[0xD1] = new("SET 2, C", SET, fetchR8, 2);
+        cbInstructions[0xD2] = new("SET 2, D", SET, fetchR8, 2);
+        cbInstructions[0xD3] = new("SET 2, E", SET, fetchR8, 2);
+        cbInstructions[0xD4] = new("SET 2, H", SET, fetchR8, 2);
+        cbInstructions[0xD5] = new("SET 2, L", SET, fetchR8, 2);
+        cbInstructions[0xD6] = new("SET 2, (HL)", SET, fetchR8, 4);
+        cbInstructions[0xD7] = new("SET 2, A", SET, fetchR8, 2);
+        cbInstructions[0xD8] = new("SET 3, B", SET, fetchR8, 2);
+        cbInstructions[0xD9] = new("SET 3, C", SET, fetchR8, 2);
+        cbInstructions[0xDA] = new("SET 3, D", SET, fetchR8, 2);
+        cbInstructions[0xDB] = new("SET 3, E", SET, fetchR8, 2);
+        cbInstructions[0xDC] = new("SET 3, H", SET, fetchR8, 2);
+        cbInstructions[0xDD] = new("SET 3, L", SET, fetchR8, 2);
+        cbInstructions[0xDE] = new("SET 3, (HL)", SET, fetchR8, 4);
+        cbInstructions[0xDF] = new("SET 3, A", SET, fetchR8, 2);
+
+        // 0xE0-0xEF: SET 4, r8
+        cbInstructions[0xE0] = new("SET 4, B", SET, fetchR8, 2);
+        cbInstructions[0xE1] = new("SET 4, C", SET, fetchR8, 2);
+        cbInstructions[0xE2] = new("SET 4, D", SET, fetchR8, 2);
+        cbInstructions[0xE3] = new("SET 4, E", SET, fetchR8, 2);
+        cbInstructions[0xE4] = new("SET 4, H", SET, fetchR8, 2);
+        cbInstructions[0xE5] = new("SET 4, L", SET, fetchR8, 2);
+        cbInstructions[0xE6] = new("SET 4, (HL)", SET, fetchR8, 4);
+        cbInstructions[0xE7] = new("SET 4, A", SET, fetchR8, 2);
+        cbInstructions[0xE8] = new("SET 5, B", SET, fetchR8, 2);
+        cbInstructions[0xE9] = new("SET 5, C", SET, fetchR8, 2);
+        cbInstructions[0xEA] = new("SET 5, D", SET, fetchR8, 2);
+        cbInstructions[0xEB] = new("SET 5, E", SET, fetchR8, 2);
+        cbInstructions[0xEC] = new("SET 5, H", SET, fetchR8, 2);
+        cbInstructions[0xED] = new("SET 5, L", SET, fetchR8, 2);
+        cbInstructions[0xEE] = new("SET 5, (HL)", SET, fetchR8, 4);
+        cbInstructions[0xEF] = new("SET 5, A", SET, fetchR8, 2);
+
+        // 0xF0-0xFF: SET 6, r8 and SET 7, r8
+        cbInstructions[0xF0] = new("SET 6, B", SET, fetchR8, 2);
+        cbInstructions[0xF1] = new("SET 6, C", SET, fetchR8, 2);
+        cbInstructions[0xF2] = new("SET 6, D", SET, fetchR8, 2);
+        cbInstructions[0xF3] = new("SET 6, E", SET, fetchR8, 2);
+        cbInstructions[0xF4] = new("SET 6, H", SET, fetchR8, 2);
+        cbInstructions[0xF5] = new("SET 6, L", SET, fetchR8, 2);
+        cbInstructions[0xF6] = new("SET 6, (HL)", SET, fetchR8, 4);
+        cbInstructions[0xF7] = new("SET 6, A", SET, fetchR8, 2);
+        cbInstructions[0xF8] = new("SET 7, B", SET, fetchR8, 2);
+        cbInstructions[0xF9] = new("SET 7, C", SET, fetchR8, 2);
+        cbInstructions[0xFA] = new("SET 7, D", SET, fetchR8, 2);
+        cbInstructions[0xFB] = new("SET 7, E", SET, fetchR8, 2);
+        cbInstructions[0xFC] = new("SET 7, H", SET, fetchR8, 2);
+        cbInstructions[0xFD] = new("SET 7, L", SET, fetchR8, 2);
+        cbInstructions[0xFE] = new("SET 7, (HL)", SET, fetchR8, 4);
+        cbInstructions[0xFF] = new("SET 7, A", SET, fetchR8, 2);
     }
 }

@@ -169,22 +169,18 @@ public class Registers
             F &= (byte)~flag;
     }
     
-    [Flags]
     public enum Flags
     {
-        Z = 0b1000,
-        N = 0b0100,
-        H = 0b0010,
-        C = 0b0001
+        Z = 0x80,
+        N = 0x40,
+        H = 0x20,
+        C = 0x10
     }
 
     private void initStartingValues()
     {
         A = 0x01;
-        SetFlag(Flags.Z, true);
-        SetFlag(Flags.N, false);
-        SetFlag(Flags.H, false); // TODO: if Cartridge header checksum is 0x00 then clear else set
-        SetFlag(Flags.C, false); // TODO: if Cartridge header checksum is 0x00 then clear else set
+        F = 0xB0;
         B = 0x00;
         C = 0x13;
         D = 0x00;

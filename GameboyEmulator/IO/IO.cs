@@ -1,11 +1,11 @@
-namespace GameboyEmulator;
+namespace GameboyEmulator.IO;
 
 public class IO
 {
     private byte joypad;
     private byte serialData;
     private byte serialControl;
-    private byte[] timer;
+    private Timer timer;
     private byte interrupts;
     private byte[] audio;
     private byte[] wavePattern;
@@ -18,7 +18,7 @@ public class IO
 
     public IO()
     {
-        timer = new byte[4];
+        this.timer = new ();
         audio = new byte[23];
         wavePattern = new byte[15];
         screen = new byte[12];
@@ -36,7 +36,7 @@ public class IO
             serialData = data;
         if (addr == 0x02)
         {
-            if (data == 0x81) // TODO: Properly Implement
+            if ((data & 0x81) == 0x81) // TODO: Properly Implement
             {
                 char c = (char)serialData;
                 Console.Write(c);
@@ -46,7 +46,7 @@ public class IO
             }
         }
         if (addr is >= 0x04 and <= 0x07)
-            timer[addr - 0x04] = data;
+            timer.Write(addr - 0x04, data);
         if (addr == 0x0F)
             interrupts = data;
         if (addr is >= 0x10 and <= 0x26)
@@ -78,7 +78,7 @@ public class IO
         if (addr == 0x02)
             return serialControl;
         if (addr is >= 0x04 and <= 0x07)
-            return timer[addr - 0x04];
+            return timer.Read(addr - 0x04);
         if (addr == 0x0F)
             return interrupts;
         if (addr is >= 0x10 and <= 0x26)
@@ -98,6 +98,11 @@ public class IO
         if (addr == 0x70)
             return wramBankSelector;
         throw new Exception($"{addr} is out of range.");
+    }
+
+    public void UpdateTimers(int cycles)
+    {
+        timer.UpdateTimers(cycles);
     }
 
     private void initStartingValues()
@@ -135,7 +140,7 @@ public class IO
         Write(0x41, 0x85);
         Write(0x42, 0x00);
         Write(0x43, 0x00);
-        Write(0x44, 0x00);
+        Write(0x44, 0x90); // TODO: SET BACK TO 0x00
         Write(0x45, 0x00);
         Write(0x46, 0xFF);
         Write(0x47, 0xFC);

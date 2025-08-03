@@ -1,3 +1,5 @@
+using Timer = GameboyEmulator.IO.Timer;
+
 namespace GameboyEmulator;
 
 public class Bus
@@ -7,7 +9,7 @@ public class Bus
     private byte[] VRAM;
     private byte[] WRAM;
     private byte[] EchoRAM; // prohibited
-    private IO IOregister;
+    public IO.IO IOregister;
     private byte[] HRAM;
     private byte IERegister;
 
@@ -17,7 +19,7 @@ public class Bus
         ROMBankNN = new byte[16384]; // 16 KiB
         VRAM = new byte[8192]; // 8 KiB
         WRAM = new byte[8192]; // 8 KiB
-        IOregister = new IO();
+        IOregister = new IO.IO();
         HRAM = new byte[126];
         
         IERegister = 0x00;

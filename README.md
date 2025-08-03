@@ -1,5 +1,24 @@
 # GameboyEmulator
 
+## Tests
+
+### Blargg's test ROMs
+
+**cpu_instrs**
+| Test | Passed? |
+|----------------|---------|
+| 01-special | **Passed** |
+| 02-interrupts | Failed |
+| 03-op sp,hl | Failed |
+| 04-op r,imm | Failed |
+| 05-op rp.gb | **Passed** |
+| 06-ld r,r | **Passed** |
+| 07-jr,jp,call,ret,rst | **Passed** |
+| 08-mis instrs | **Passed** |
+| 09-op r,r | Failed |
+| 10-bit ops | Failed |
+| 11-op a,(hl) | Failed |
+
 ## Resourcess
 
 - https://gbdev.io/pandocs/About.html | General overview
@@ -18,3 +37,10 @@
 - https://github.com/Rodrigodd/gameroy | Other Emulator with debugger
 - https://hexed.it | Hex Editor
 - https://github.com/robert/gameboy-doctor/tree/master | Gameboy Doctor for diagnosing Issues
+
+### AI
+
+- ChatGPT | General Questions
+- Gemini | Check if Instructions implemented correctly (sometimes worked)
+- Perplexity | Questions about the Gameboy Architecture
+- Claude | Generating both Instruction Tables

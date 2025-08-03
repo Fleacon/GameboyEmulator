@@ -18,6 +18,8 @@ public class LR35902
     
     private Instruction[] instructions;
     private Instruction[] cbInstructions;
+
+    private Logger logger = new("export");
     
     // set of Masks to read out the values stored in the OpCode
     public enum Masks : byte
@@ -58,6 +60,7 @@ public class LR35902
             {
                 cycles = 2;
             }
+            //createLogFile();
             
             opCode = Bus.Read(Registers.PC);
             Console.Write($"PC: {Registers.PC:X4}, ");

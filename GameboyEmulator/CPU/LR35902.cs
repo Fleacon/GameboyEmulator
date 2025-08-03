@@ -12,6 +12,7 @@ public class LR35902
     private ushort fetched;
     private bool isCB;
     private bool isHalted;
+    private bool isStopped;
     private int cycles;
     private bool withBranch;
     private bool IME;
@@ -28,7 +29,7 @@ public class LR35902
         R16 = 0b00110000,
         // Single Registers are either stored in the middle of the byte or the left of the byte 
         R8Right = 0b00000111,
-        R8Middle = 0b01110000,
+        R8Middle = 0b00111000,
         Target = 0b00111000,
         U3 = 0b01110000
     }
@@ -50,37 +51,52 @@ public class LR35902
         instructions = new Instruction[0x100];
         initInstructionArray();
         cbInstructions = new Instruction[0x100];
+        initCBInstructionArray();
     }
 
-    public void Clock()
+    public int Execute()
     {
-        if (cycles == 0)
-        {
-            if (isHalted)
-            {
-                cycles = 2;
-            }
+        if (!(isHalted || isStopped))
+        {   
             //createLogFile();
             
             opCode = Bus.Read(Registers.PC);
-            Console.Write($"PC: {Registers.PC:X4}, ");
             Registers.PC++;
-            
-            var ins = !isCB ? instructions[opCode] : cbInstructions[opCode];
-            Console.Write($"ins: {ins.Name}, ");
+
+            Instruction ins;
+            if (opCode == 0xCB)
+            {
+                opCode = Bus.Read(Registers.PC);
+                Registers.PC++;
+                ins = cbInstructions[opCode];
+            }
+            else
+            {
+                ins = instructions[opCode];
+            }
             
             fetched = ins.AddressingMode();
-            Console.WriteLine($"fetched: {fetched:X4}");
             
             ins.Typ();
             
             cycles = withBranch ? ins.CyclesBranch : ins.Cycles;
             withBranch = false;
-            
-            if (checkInterrupt(out Interrupts interrupt))
-                handleInterrupt(interrupt);
         }
-        cycles--;
+        else
+        {
+            cycles = 2;
+        }
+            
+        if (checkInterrupt(out Interrupts interrupt))
+            handleInterrupt(interrupt);
+        
+        return cycles;
+    }
+
+    private void createLogFile()
+    {
+        string log = $"A:{Registers.A:X2} F:{Registers.F:X2} B:{Registers.B:X2} C:{Registers.C:X2} D:{Registers.D:X2} E:{Registers.E:X2} H:{Registers.H:X2} L:{Registers.L:X2} SP:{Registers.SP:X4} PC:{Registers.PC:X4} PCMEM:{Bus.Read(Registers.PC):X2},{Bus.Read((ushort)(Registers.PC + 1)):X2},{Bus.Read((ushort)(Registers.PC + 2)):X2},{Bus.Read((ushort)(Registers.PC + 3)):X2}";
+        logger.Log(log);
     }
 
     private bool checkInterrupt(out Interrupts interrupt)
@@ -115,6 +131,8 @@ public class LR35902
     {
         isHalted = false;
         
+        if (interrupt == Interrupts.Joypad) isStopped = true;
+        
         Registers.SP -= 2;
         Bus.Write16(Registers.SP, Registers.PC);
 
@@ -139,7 +157,7 @@ public class LR35902
     private ushort fetchR8()
     {
         // if Instruction has CB prefix or is LD r8, r8
-        var code = isCB || ((opCode & 0b01000000) == 0x40) ? util.ReadCode(opCode, Masks.R8Right) : util.ReadCode(opCode, Masks.R8Middle);
+        var code = isCB || ((opCode & 0xC0) == 0x0) ? util.ReadCode(opCode, Masks.R8Middle) : util.ReadCode(opCode, Masks.R8Right);
         var val = Registers.GetR8(code);
         return val;
     }
@@ -193,7 +211,7 @@ public class LR35902
     private void LD_r16()
     {
         var dest = util.ReadCode(opCode,Masks.R16);
-        Registers.SetR16(dest, (byte)fetched);
+        Registers.SetR16(dest, fetched);
     }
 
     private void LD_r16mem()
@@ -383,7 +401,8 @@ public class LR35902
 
     private void STOP()
     {
-        // TODO: Implement STOP
+        isStopped = true;
+        Bus.Write8(0xFF04, 0); // Stop DIV Timer
     }
 
     private void HALT()
@@ -401,14 +420,14 @@ public class LR35902
     private void ADD()
     {
         var regA = Registers.A;
-        var result = regA + fetched;
+        var result = (byte)(regA + fetched);
         
-        Registers.A = (byte)result;
+        Registers.A = result;
         
         Registers.SetFlag(Flags.Z, result == 0);
         Registers.SetFlag(Flags.N, false);
         Registers.SetFlag(Flags.H, ((regA & 0x0F) + (fetched & 0x0F)) > 0x0F);
-        Registers.SetFlag(Flags.C, result > 0xFF);
+        Registers.SetFlag(Flags.C, regA > result);
     }
 
     private void ADD_HL()
@@ -441,22 +460,22 @@ public class LR35902
     {
         var regA = Registers.A;
         var cFlagValue = Registers.GetFlag(Flags.C) ? 1 : 0;
-        var result = regA + fetched + cFlagValue;
+        var result = (byte)(regA + fetched + cFlagValue);
         
-        Registers.A = (byte)result;
+        Registers.A = result;
         
         Registers.SetFlag(Flags.Z, result == 0);
         Registers.SetFlag(Flags.N, false);
         Registers.SetFlag(Flags.H, ((regA & 0x0F) + (fetched & 0x0F) + cFlagValue) > 0x0F);
-        Registers.SetFlag(Flags.C, result > 0xFF);
+        Registers.SetFlag(Flags.C, regA > result);
     }
 
     private void SUB()
     {
         var regA = Registers.A;
-        var result = regA - fetched;
+        var result = (byte)(regA - fetched);
         
-        Registers.A = (byte)result;
+        Registers.A = result;
         
         Registers.SetFlag(Flags.Z, result == 0);
         Registers.SetFlag(Flags.N, true);
@@ -468,9 +487,9 @@ public class LR35902
     {
         var regA = Registers.A;
         var cFlagValue = Registers.GetFlag(Flags.C) ? 1 : 0;
-        var result = regA - fetched - cFlagValue;
+        var result = (byte)(regA - fetched - cFlagValue);
         
-        Registers.A = (byte)result;
+        Registers.A = result;
         
         Registers.SetFlag(Flags.Z, result == 0);
         Registers.SetFlag(Flags.N, true);

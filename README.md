@@ -9,7 +9,7 @@
 |----------------|---------|
 | 01-special | **Passed** |
 | 02-interrupts | **Passed** |
-| 03-op sp,hl | Failed |
+| 03-op sp,hl | **Passed** |
 | 04-op r,imm | Failed |
 | 05-op rp.gb | **Passed** |
 | 06-ld r,r | **Passed** |

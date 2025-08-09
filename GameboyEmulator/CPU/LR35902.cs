@@ -459,9 +459,9 @@ public class LR35902
     {
         var regSP = Registers.SP;
         var signedOffset = (sbyte)fetched;
-        var result = Registers.SP + fetched;
+        var result = (ushort)(Registers.SP + (sbyte)fetched);
         
-        Registers.SP = (ushort)result;
+        Registers.SP = result;
         
         Registers.SetFlag(Flags.Z, false);
         Registers.SetFlag(Flags.N, false);

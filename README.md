@@ -15,7 +15,7 @@
 | 06-ld r,r | **Passed** |
 | 07-jr,jp,call,ret,rst | **Passed** |
 | 08-mis instrs | **Passed** |
-| 09-op r,r | Failed |
+| 09-op r,r | **Passed** |
 | 10-bit ops | Failed |
 | 11-op a,(hl) | Failed |
 

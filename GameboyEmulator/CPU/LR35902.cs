@@ -16,6 +16,7 @@ public class LR35902
     private int cycles;
     private bool withBranch;
     private bool IME;
+    private ushort prevIF;
     
     private Instruction[] instructions;
     private Instruction[] cbInstructions;
@@ -56,10 +57,14 @@ public class LR35902
 
     public int Execute()
     {
+        if (checkInterrupt(out Interrupts interrupt))
+        {
+            handleInterrupt(interrupt);
+            return cycles;
+        }
+        
         if (!(isHalted || isStopped))
         {   
-            //createLogFile();
-            
             opCode = Bus.Read(Registers.PC);
             Registers.PC++;
 
@@ -81,14 +86,13 @@ public class LR35902
             
             cycles = withBranch ? ins.CyclesBranch : ins.Cycles;
             withBranch = false;
+            
+            createLogFile();
         }
         else
         {
             cycles = 2;
         }
-            
-        if (checkInterrupt(out Interrupts interrupt))
-            handleInterrupt(interrupt);
         
         return cycles;
     }
@@ -122,7 +126,13 @@ public class LR35902
             interrupt = (Interrupts)i;
             return true;
         }
+        
+        if (isHalted && ((IF & 0x1F) != (prevIF & 0x1F)))
+        {
+            isHalted = false;
+        }
 
+        prevIF = IF;
         interrupt = Interrupts.NONE;
         return false;
     }
@@ -131,7 +141,7 @@ public class LR35902
     {
         isHalted = false;
         
-        if (interrupt == Interrupts.Joypad) isStopped = true;
+        if (interrupt == Interrupts.Joypad) isStopped = false;
         
         Registers.SP -= 2;
         Bus.Write16(Registers.SP, Registers.PC);
@@ -413,6 +423,7 @@ public class LR35902
         var IF = Bus.Read(0xFF0F);
         if (!IME && (IE & IF & 0x1F) != 0) // Hardware Bug
         {
+            isHalted = false;
             Registers.PC--;
         }
     }
@@ -644,16 +655,6 @@ public class LR35902
         var val = (ushort)((hi << 8) | lo);
         
         Registers.SetR16Stk(code, val);
-        
-        /*
-        // Register AF
-        if (code == 3) {
-            Registers.SetFlag(Flags.Z, (lo & 0x80) == 0x80);
-            Registers.SetFlag(Flags.N, (lo & 0x40) == 0x40);
-            Registers.SetFlag(Flags.H, (lo & 0x20) == 0x20);
-            Registers.SetFlag(Flags.C, (lo & 0x10) == 0x10);
-        }
-        */
     }
 
     private void PUSH()
@@ -690,7 +691,7 @@ public class LR35902
     {
         var regSP = Registers.SP;
         var signed = (sbyte)fetched;
-        var result = (ushort)(Registers.SP + fetched);
+        var result = (ushort)(Registers.SP + signed);
         
         Registers.HL = result;
         
@@ -714,7 +715,6 @@ public class LR35902
     {
         IME = true;
     }
-    
     
     private void PREFIX_CB()
     {

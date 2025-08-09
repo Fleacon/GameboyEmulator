@@ -1,9 +1,13 @@
+using System.Text;
+
 namespace GameboyEmulator;
 
 public class Logger
 {
+    private readonly StringBuilder buffer;
     private readonly string filePath;
-    private readonly object sync = new();
+    private bool startLine;
+    private const int BUFFERSIZE = 10000;
 
     public Logger(string filePath)
     {
@@ -13,13 +17,33 @@ public class Logger
         {
             Directory.CreateDirectory(dir); // ensure directory exists
         }
+        
+        buffer = new StringBuilder();
     }
     
     public void Log(string message)
     {
-        lock (sync)
+        if (!startLine)
         {
-            File.AppendAllText(filePath, message + Environment.NewLine);
+            buffer.AppendLine("A:01 F:B0 B:00 C:13 D:00 E:D8 H:01 L:4D SP:FFFE PC:0100 PCMEM:00,C3,13,02");
+            startLine = true;
         }
+        buffer.AppendLine(message);
+        if (buffer.Length >= BUFFERSIZE)
+        {
+            SaveToFile();
+            buffer.Clear();
+        }
+    }
+
+    public void SaveToFile()
+    {
+        File.AppendAllText(filePath, buffer.ToString());
+    }
+
+    public void RegisterShutdownHandler()
+    {
+        AppDomain.CurrentDomain.ProcessExit += (sender, args) => SaveToFile();
+        Console.CancelKeyPress += (sender, args) => SaveToFile();
     }
 }

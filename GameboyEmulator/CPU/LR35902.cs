@@ -53,6 +53,8 @@ public class LR35902
         initInstructionArray();
         cbInstructions = new Instruction[0x100];
         initCBInstructionArray();
+        
+        logger.RegisterShutdownHandler();
     }
 
     public int Execute()

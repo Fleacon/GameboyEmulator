@@ -8,7 +8,7 @@
 | Test | Passed? |
 |----------------|---------|
 | 01-special | **Passed** |
-| 02-interrupts | Failed |
+| 02-interrupts | **Passed** |
 | 03-op sp,hl | Failed |
 | 04-op r,imm | Failed |
 | 05-op rp.gb | **Passed** |

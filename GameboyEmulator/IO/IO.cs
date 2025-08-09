@@ -18,7 +18,7 @@ public class IO
 
     public IO()
     {
-        this.timer = new ();
+        this.timer = new (this);
         audio = new byte[23];
         wavePattern = new byte[15];
         screen = new byte[12];
@@ -103,6 +103,20 @@ public class IO
     public void UpdateTimers(int cycles)
     {
         timer.UpdateTimers(cycles);
+    }
+
+    public void RequestInterrupt(Interrupts interrupt)
+    {
+        interrupts |= (byte)interrupt;
+    }
+
+    public enum Interrupts
+    {
+        VBLANK = 0b00001,
+        LCD    = 0b00010,
+        Timer  = 0b00100,
+        Serial = 0b01000,
+        Joypad = 0b10000,
     }
 
     private void initStartingValues()

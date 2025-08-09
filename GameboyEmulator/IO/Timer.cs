@@ -2,17 +2,25 @@ namespace GameboyEmulator.IO;
 
 public class Timer
 {
-    private byte dividerRegister;
+    private IO io;
+    
+    private ushort dividerRegister;
     private byte timerCounter;
     private byte timerModulo;
     private byte timerControl;
     
     private int tCounter;
-    private int dCounter = 0;
+    private int dCounter;
+
+    public Timer(IO io)
+    {
+        this.io = io;
+    }
 
     public void UpdateTimers(int cycles)
     {
-        updateDivider(cycles);
+        int tCycles = cycles * 4; // Machine Cycles to Tick Cycles
+        updateDivider(tCycles);
 
         if (isClockEnabled())
         {
@@ -25,7 +33,7 @@ public class Timer
                 if (timerCounter == 255) // about to overflow
                 {
                     timerCounter = timerModulo;
-                    // TODO: Interrupt
+                    io.RequestInterrupt(IO.Interrupts.Timer);
                 }
                 else
                 {
@@ -58,7 +66,7 @@ public class Timer
     {
         switch (target)
         {
-            case 0: return dividerRegister;
+            case 0: return (byte)(dividerRegister >> 8);
             case 1: return timerCounter;
             case 2: return timerModulo;
             case 3: return timerControl;
@@ -68,10 +76,10 @@ public class Timer
 
     private void updateDivider(int cycles)
     {
-        dCounter += (byte)cycles;
-        if (dCounter >= 255)
+        dCounter += cycles;
+        if (dCounter >= 256)
         {
-            dCounter = 0;
+            dCounter -= 256;
             dividerRegister++;
         }
     }

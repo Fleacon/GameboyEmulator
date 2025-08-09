@@ -10,7 +10,7 @@
 | 01-special | **Passed** |
 | 02-interrupts | **Passed** |
 | 03-op sp,hl | **Passed** |
-| 04-op r,imm | Failed |
+| 04-op r,imm | **Passed** |
 | 05-op rp.gb | **Passed** |
 | 06-ld r,r | **Passed** |
 | 07-jr,jp,call,ret,rst | **Passed** |

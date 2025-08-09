@@ -473,14 +473,14 @@ public class LR35902
     {
         var regA = Registers.A;
         var cFlagValue = Registers.GetFlag(Flags.C) ? 1 : 0;
-        var result = (byte)(regA + fetched + cFlagValue);
+        var result = regA + fetched + cFlagValue;
         
-        Registers.A = result;
+        Registers.A = (byte)result;
         
-        Registers.SetFlag(Flags.Z, result == 0);
+        Registers.SetFlag(Flags.Z, Registers.A == 0);
         Registers.SetFlag(Flags.N, false);
         Registers.SetFlag(Flags.H, ((regA & 0x0F) + (fetched & 0x0F) + cFlagValue) > 0x0F);
-        Registers.SetFlag(Flags.C, regA > result);
+        Registers.SetFlag(Flags.C, result > 0xFF);
     }
 
     private void SUB()

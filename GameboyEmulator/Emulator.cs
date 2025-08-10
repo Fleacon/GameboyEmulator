@@ -9,10 +9,10 @@ public class Emulator
     private Bus bus;
     private IO.IO io;
 
-    public Emulator(LR35902 cpu, Bus bus)
+    public Emulator()
     {
-        this.cpu = cpu;
-        this.bus = bus;
+        bus = new ();
+        cpu = new (bus);
     }
     
     public void Update()

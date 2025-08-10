@@ -33,7 +33,7 @@ public class Timer
                 if (timerCounter == 255) // about to overflow
                 {
                     timerCounter = timerModulo;
-                    io.RequestInterrupt(IO.Interrupts.Timer);
+                    io.RequestInterrupt(Interrupts.TIMER);
                 }
                 else
                 {

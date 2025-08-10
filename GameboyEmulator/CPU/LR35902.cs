@@ -34,17 +34,7 @@ public class LR35902
         Target = 0b00111000,
         U3 = 0b00111000
     }
-
-    public enum Interrupts
-    {
-        VBlank = 0,
-        LCD = 1,
-        Timer = 2,
-        Serial = 3,
-        Joypad = 4,
-        NONE = 5
-    }
-
+    
     public LR35902(Bus bus)
     {
         this.Bus = bus;
@@ -143,18 +133,18 @@ public class LR35902
     {
         isHalted = false;
         
-        if (interrupt == Interrupts.Joypad) isStopped = false;
+        if (interrupt == Interrupts.JOYPAD) isStopped = false;
         
         Registers.SP -= 2;
         Bus.Write16(Registers.SP, Registers.PC);
 
         Registers.PC = interrupt switch
         {
-            Interrupts.VBlank => 0x40,
+            Interrupts.VBLANK => 0x40,
             Interrupts.LCD => 0x48,
-            Interrupts.Timer => 0x50,
-            Interrupts.Serial => 0x58,
-            Interrupts.Joypad => 0x60,
+            Interrupts.TIMER => 0x50,
+            Interrupts.SERIAL => 0x58,
+            Interrupts.JOYPAD => 0x60,
             _ => throw new Exception("INVALID INTERRUPT"),
         };
         cycles = 5;

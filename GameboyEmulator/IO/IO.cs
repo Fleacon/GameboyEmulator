@@ -110,15 +110,6 @@ public class IO
         interrupts |= (byte)interrupt;
     }
 
-    public enum Interrupts
-    {
-        VBLANK = 0b00001,
-        LCD    = 0b00010,
-        Timer  = 0b00100,
-        Serial = 0b01000,
-        Joypad = 0b10000,
-    }
-
     private void initStartingValues()
     {
         Write(0x00, 0xCF);

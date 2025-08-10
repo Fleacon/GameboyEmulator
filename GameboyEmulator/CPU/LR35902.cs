@@ -32,7 +32,7 @@ public class LR35902
         R8Right = 0b00000111,
         R8Middle = 0b00111000,
         Target = 0b00111000,
-        U3 = 0b01110000
+        U3 = 0b00111000
     }
 
     public enum Interrupts
@@ -89,7 +89,7 @@ public class LR35902
             cycles = withBranch ? ins.CyclesBranch : ins.Cycles;
             withBranch = false;
             
-            createLogFile();
+            //createLogFile();
         }
         else
         {

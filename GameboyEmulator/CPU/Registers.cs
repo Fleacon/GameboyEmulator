@@ -169,7 +169,8 @@ public class Registers
             F &= (byte)~flag;
     }
     
-    public enum Flags
+    [Flags]
+    public enum Flags : byte
     {
         Z = 0x80,
         N = 0x40,

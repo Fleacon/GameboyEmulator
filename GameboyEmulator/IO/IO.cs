@@ -38,8 +38,10 @@ public class IO
         {
             if ((data & 0x81) == 0x81) // TODO: Properly Implement
             {
-                char c = (char)serialData;
-                Console.Write(c);
+                //char c = (char)serialData;
+                //Console.Write(c);
+                int c = serialData;
+                Console.Write($"{c:X2} ");
                 
                 serialData = 0xFF;
                 serialControl = 0;
@@ -66,7 +68,7 @@ public class IO
         if (addr == 0x70)
             wramBankSelector = data;
         if (addr > 0x70)
-            throw new Exception($"{addr} is out of range.");
+            throw new Exception($"{addr:X4} is out of range.");
     }
 
     public byte Read(ushort addr)
@@ -97,7 +99,7 @@ public class IO
             return bgoObjPalettes[addr - 0x68];
         if (addr == 0x70)
             return wramBankSelector;
-        throw new Exception($"{addr} is out of range.");
+        throw new Exception($"{addr:X4} is out of range.");
     }
 
     public void UpdateTimers(int cycles)

@@ -18,6 +18,15 @@
 | 09-op r,r | **Passed** |
 | 10-bit ops | **Passed** |
 | 11-op a,(hl) | **Passed** |
+| cpu_instrs | Failed |
+
+### Mooneye's test ROMs
+
+**mbc1**
+| Test | Passed? |
+| ---- | ------- |
+| bits_bank1 | **Passed** |
+| bits_bank2 | Failed |
 
 ## Resourcess
 

@@ -24,9 +24,19 @@
 
 **mbc1**
 | Test | Passed? |
-| ---- | ------- |
+| ----------- | ---------- |
 | bits_bank1 | **Passed** |
 | bits_bank2 | **Passed** |
+| bits_mode | Failed |
+| bits_ramg | **Passed** |
+| ram_64kb | **Passed** |
+| ram_256kb | **Passed** |
+| rom_1Mb | **Passed** |
+| rom_2Mb | **Passed** |
+| rom_4Mb | **Passed** |
+| rom_8Mb | **Passed** |
+| rom_16Mb | **Passed** |
+| rom_512kb | **Passed** |
 
 ## Resourcess
 

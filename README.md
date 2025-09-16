@@ -26,7 +26,7 @@
 | Test | Passed? |
 | ---- | ------- |
 | bits_bank1 | **Passed** |
-| bits_bank2 | Failed |
+| bits_bank2 | **Passed** |
 
 ## Resourcess
 

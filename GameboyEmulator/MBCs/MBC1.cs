@@ -4,55 +4,49 @@ public class MBC1 : IMapper
 {
     public bool RamEnabled { get; set; }
 
-    public byte RomBankNum { get; set; }
+    private byte mode; // 0b0 or 0b1 Mode (ROM banking or RAM banking Mode)
 
-    public byte RamBankNum { get; set; }
-    public bool isRamBankingMode { get; set; }
-
+    private byte bank1 = 1; // Lower 5 bits for ROM Banking
+    private byte bank2; // Either 2 upper bits of ROM Bank or 2 bit Register for RAM Banking
+    
     public byte Read(Cartridge c, ushort addr)
     {
         if (addr <= 0x3FFF)
         {
-            if (isRamBankingMode)
+            if (mode == 0)
             {
-                int bank = RamBankNum << 5;
+                return readRomBank(c, 0, addr);
+            }
+            else if (mode == 1)
+            {
+                byte bank = (byte)(bank2 << 5);
                 int bankMask = (1 << c.RomBankNumBits) - 1;
-                bank = bank & bankMask;
-                if (bank == 0)
-                {
-                    return c.ROMBank00[addr];
-                }
-                else
-                {
-                    return c.ROMBankNN[bank - 1][addr];
-                }
+                bank = (byte)(bank & bankMask);
+                return readRomBank(c, bank, addr);
             }
-            else
-            {
-                return c.ROMBank00[addr];
-            }
+            throw new Exception($"Mode undefined: {mode:X2}");
         }
         if (addr is >= 0x4000 and <= 0x7FFF)
         {
-            int bank = RamBankNum << 5 | RomBankNum;
+            byte bank = (byte)((bank2 << 5) | bank1);
             int bankMask = (1 << c.RomBankNumBits) - 1;
-            bank = bank & bankMask;
-            // Cannot Access Bank 0x00, 0x20, 0x40, 0x60 -> instead read 0x01, 0x21 and so on.
-            // Because Bank 0 is stored seperatly the index of the Rombanks Array is one lower than the actual bank number.
-            // So we decrement if it is not zero to access the proper Banks and let the value be if it is zero because it is already one higher
-            if (bank != 0 && bank != 0x20 && bank != 0x40 && bank != 0x60) 
-            {
-                bank--;
-            }
-            return c.ROMBankNN[bank][addr - 0x4000];
+            bank = (byte)(bank & bankMask);
+            return readRomBank(c, bank, addr - 0x4000);
         }
         if (addr is >= 0xA000 and <= 0xBFFF)
         {
             if (!c.RamExists || !RamEnabled)
                 return 0xFF;
-            
-            int bank = isRamBankingMode ? RamBankNum : 0;
-            return c.RAMBankNN[bank][addr - 0xA000];
+            if (mode == 0)
+            {
+                return c.RAMBankNN[0][addr - 0xA000];
+            }
+            if (mode == 1)
+            {
+                byte ramBank = (byte)(bank2 & ((1 << c.RamBankNumBits) - 1));
+                return c.RAMBankNN[ramBank][addr - 0xA000];
+            }
+            throw new Exception($"Mode undefined: {mode:X2}");
         }
         throw new Exception($"Adress out of range. {addr:X4}");
     }
@@ -60,39 +54,54 @@ public class MBC1 : IMapper
     public void Write(Cartridge c, ushort addr, byte value)
     {
         if (addr <= 0x1FFF)
-            RamEnabled = (value & 0xF) == 0xA;
+        {
+            RamEnabled = (value & 0xF) == 0b1010;
+        }
         if (addr is >= 0x2000 and <= 0x3FFF)
         {
-            byte lower5 = (byte)(value & 0x1F);
-            RomBankNum = (byte)((RomBankNum & 0xE0) | lower5);
-            if (lower5 == 0)
-                RomBankNum++;
+            int bank = value & 0x1F;
+            if (bank == 0)
+                bank = 1;
+            bank1 = (byte)bank;
         }
         if (addr is >= 0x4000 and <= 0x5FFF)
         {
-            byte lower2 = (byte)(value & 0x03);
-            RamBankNum = lower2;
+            bank2 = (byte)(value & 0x3);
         }
         if (addr is >= 0x6000 and <= 0x7FFF)
         {
-            if (value == 0x00)
-                isRamBankingMode = false;
-            if (value == 0x01)
-                isRamBankingMode = true;
+            mode = (byte)(value & 1);
         }
         if (addr is >= 0xA000 and <= 0xBFFF)
         {
-            if (RamEnabled)
+            if (!c.RamExists || !RamEnabled)
+                return;
+            if (mode == 0)
             {
-                if (!isRamBankingMode)
-                {
-                    c.RAMBankNN[0][addr - 0xA000] = value;
-                }
-                else
-                {
-                    c.RAMBankNN[RamBankNum][addr - 0xA000] = value;
-                }
+                c.RAMBankNN[0][addr - 0xA000] = value;
             }
+            else if (mode == 1)
+            {
+                byte ramBank = (byte)(bank2 & ((1 << c.RamBankNumBits) - 1));
+                c.RAMBankNN[ramBank][addr - 0xA000] = value;
+            }
+            else
+            {
+                throw new Exception($"Mode undefined: {mode:X2}");
+            }
+        }
+    }
+
+    // Because RomBank0 is stored seperatly, some logic for handling bank 0 access
+    private byte readRomBank(Cartridge c, byte bank, int addr)
+    {
+        if (bank == 0)
+        {
+            return c.ROMBank00[addr];
+        }
+        else
+        {
+            return c.ROMBankNN[bank - 1][addr];
         }
     }
 }

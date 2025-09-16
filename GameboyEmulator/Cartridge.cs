@@ -24,10 +24,12 @@ public class Cartridge
     public readonly byte[] ROMBank00;
     public byte[][] ROMBankNN; // Does not contain Bank 0
     public ushort NumOfRomBanks { get; private set; }
+    public ushort NumOfRamBanks { get; private set; }
     public ushort RomBankNumBits { get; private set; }
+    public ushort RamBankNumBits { get; private set; }
     
     public byte[][] RAMBankNN;
-    public ushort NumOfRamBanks { get; private set; }
+    
 
     public Cartridge()
     {
@@ -50,7 +52,7 @@ public class Cartridge
         {
             if (addr is >= 0xA000 and <= 0xBFFF && RamExists)
             {
-                RAMBankNN[0][addr] = data;
+                RAMBankNN[0][addr - 0xA000] = data;
             }
         }
         else
@@ -116,6 +118,7 @@ public class Cartridge
                 break;
         }
         NumOfRamBanks = (byte)(ramSize / 0x2000);
+        RamBankNumBits = (byte)MathF.Ceiling(MathF.Log2(NumOfRamBanks));
         RAMBankNN = new byte[NumOfRamBanks][];
         for (int i = 0; i < NumOfRamBanks; i++)
         {

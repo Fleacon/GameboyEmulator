@@ -54,6 +54,8 @@ public class Bus
             return cartridge.Read(addr);
         if (addr is >= 0x8000 and <= 0x9FFF)
             return VRAM[addr - 0x8000];
+        if (addr is >= 0xA000 and <= 0xBFFF)
+            return cartridge.Read(addr);
         if (addr is >= 0xC000 and <= 0xDFFF)
             return WRAM[addr - 0xC000];
         if (addr is >= 0xFF00 and <= 0xFF7F)

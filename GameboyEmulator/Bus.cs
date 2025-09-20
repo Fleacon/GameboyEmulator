@@ -23,7 +23,7 @@ public class Bus
 
     public void Write8(ushort addr, byte data)
     {
-        if (addr < 0x7FFF) 
+        if (addr <= 0x7FFF) 
             cartridge.Write(addr, data);
         if (addr is >= 0x8000 and <= 0x9FFF)
             VRAM[addr - 0x8000] = data;

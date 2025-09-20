@@ -38,5 +38,6 @@ public class Emulator
         var cartridge = new Cartridge();
         cartridge.LoadGame(rom);
         Bus.InsertCartridge(cartridge);
+        cartridge.PrintInfo();
     }
 }

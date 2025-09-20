@@ -78,6 +78,24 @@ public class Cartridge
             return mbc.Read(this, addr);
         }
     }
+    
+    public void PrintInfo()
+    {
+        Console.WriteLine("=== Cartridge Info ===");
+        Console.WriteLine($"Title: {Title}");
+        Console.WriteLine($"Manufacturer: {ManufacturerCode}");
+        Console.WriteLine($"CGB Flag: 0x{CGBFlag:X2}");
+        Console.WriteLine($"SGB Flag: 0x{SGBFlag:X2}");
+        Console.WriteLine($"Destination Code: 0x{DestinationCode:X2}");
+        Console.WriteLine($"ROM Banks: {NumOfRomBanks}");
+        Console.WriteLine($"RAM Banks: {NumOfRamBanks}");
+        Console.WriteLine($"Has RAM: {RamExists}");
+        Console.WriteLine($"Has Battery: {BatteryExists}");
+        Console.WriteLine($"Has Timer: {TimerExists}");
+        Console.WriteLine($"Has Rumble: {RumbleExists}");
+        Console.WriteLine($"Has Sensor: {SensorExists}");
+        Console.WriteLine("======================");
+    }
 
     private void ReadCartridgeHeader(byte[] data)
     {

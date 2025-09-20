@@ -7,18 +7,7 @@
 **cpu_instrs**
 | Test | Passed? |
 |----------------|---------|
-| 01-special | **Passed** |
-| 02-interrupts | **Passed** |
-| 03-op sp,hl | **Passed** |
-| 04-op r,imm | **Passed** |
-| 05-op rp.gb | **Passed** |
-| 06-ld r,r | **Passed** |
-| 07-jr,jp,call,ret,rst | **Passed** |
-| 08-mis instrs | **Passed** |
-| 09-op r,r | **Passed** |
-| 10-bit ops | **Passed** |
-| 11-op a,(hl) | **Passed** |
-| cpu_instrs | Failed |
+| cpu_instrs | **Passed** |
 
 ### Mooneye's test ROMs
 
@@ -27,7 +16,7 @@
 | ----------- | ---------- |
 | bits_bank1 | **Passed** |
 | bits_bank2 | **Passed** |
-| bits_mode | Failed |
+| bits_mode | **Passed** |
 | bits_ramg | **Passed** |
 | ram_64kb | **Passed** |
 | ram_256kb | **Passed** |

@@ -18,6 +18,7 @@
 | bits_bank2 | **Passed** |
 | bits_mode | **Passed** |
 | bits_ramg | **Passed** |
+| multicart_rom_8Mb | Failed |
 | ram_64kb | **Passed** |
 | ram_256kb | **Passed** |
 | rom_1Mb | **Passed** |

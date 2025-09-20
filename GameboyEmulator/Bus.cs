@@ -12,6 +12,8 @@ public class Bus
     private byte[] HRAM;
     private byte IERegister;
 
+    private byte lastByte; // TODO: When the CPU tries to read from unmapped addresses, it should return the last Byte stored in the bus 
+
     public Bus()
     {
         VRAM = new byte[8192]; // 8 KiB
@@ -64,7 +66,7 @@ public class Bus
             return HRAM[addr - 0xFF80];
         if (addr is 0xFFFF)
             return IERegister;
-        return 0;
+        return 0xFF;
     }
 
     public void InsertCartridge(Cartridge cartridge)

@@ -99,7 +99,7 @@ public class IO
             return bgoObjPalettes[addr - 0x68];
         if (addr == 0x70)
             return wramBankSelector;
-        throw new Exception($"{addr:X4} is out of range.");
+        return 0xFF;
     }
 
     public void UpdateTimers(int cycles)

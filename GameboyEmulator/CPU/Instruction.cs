@@ -1,6 +1,6 @@
 namespace GameboyEmulator;
 
-public struct Instruction(string name, Action operate, Func<ushort> addressingMode, byte cycles, byte cyclesBranch = 0)
+public readonly record struct Instruction(string name, Action operate, Func<ushort> addressingMode, byte cycles, byte cyclesBranch = 0)
 {
     public readonly string Name = name;
     public readonly Action Typ = operate;

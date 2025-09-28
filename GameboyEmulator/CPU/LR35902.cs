@@ -1,12 +1,14 @@
+using System.Diagnostics.CodeAnalysis;
 using static GameboyEmulator.Registers;
 
 namespace GameboyEmulator.CPU;
 
+[SuppressMessage("ReSharper", "InconsistentNaming")]
 public class LR35902
 {
     public Registers Registers;
 
-    public Bus Bus;
+    public MMU Mmu;
     
     private byte opCode;
     private ushort fetched;
@@ -15,11 +17,11 @@ public class LR35902
     private bool isStopped;
     private int cycles;
     private bool withBranch;
-    private bool IME;
+    private bool ime;
     private ushort prevIF;
     
-    private Instruction[] instructions;
-    private Instruction[] cbInstructions;
+    private readonly Instruction[] instructions;
+    private readonly Instruction[] cbInstructions;
 
     private Logger logger = new("export");
     
@@ -35,9 +37,9 @@ public class LR35902
         U3 = 0b00111000
     }
     
-    public LR35902(Bus bus)
+    public LR35902(MMU mmu)
     {
-        this.Bus = bus;
+        Mmu = mmu;
         Registers = new(this);
         instructions = new Instruction[0x100];
         initInstructionArray();
@@ -57,13 +59,13 @@ public class LR35902
         
         if (!(isHalted || isStopped))
         {   
-            opCode = Bus.Read(Registers.PC);
+            opCode = Mmu.Read(Registers.PC);
             Registers.PC++;
 
             Instruction ins;
             if (opCode == 0xCB)
             {
-                opCode = Bus.Read(Registers.PC);
+                opCode = Mmu.Read(Registers.PC);
                 Registers.PC++;
                 ins = cbInstructions[opCode];
             }
@@ -71,14 +73,10 @@ public class LR35902
             {
                 ins = instructions[opCode];
             }
-            
             fetched = ins.AddressingMode();
-            
             ins.Typ();
-            
             cycles = withBranch ? ins.CyclesBranch : ins.Cycles;
             withBranch = false;
-            
             //createLogFile();
         }
         else
@@ -91,30 +89,30 @@ public class LR35902
 
     private void createLogFile()
     {
-        string log = $"A:{Registers.A:X2} F:{Registers.F:X2} B:{Registers.B:X2} C:{Registers.C:X2} D:{Registers.D:X2} E:{Registers.E:X2} H:{Registers.H:X2} L:{Registers.L:X2} SP:{Registers.SP:X4} PC:{Registers.PC:X4} PCMEM:{Bus.Read(Registers.PC):X2},{Bus.Read((ushort)(Registers.PC + 1)):X2},{Bus.Read((ushort)(Registers.PC + 2)):X2},{Bus.Read((ushort)(Registers.PC + 3)):X2}";
+        string log = $"A:{Registers.A:X2} F:{Registers.F:X2} B:{Registers.B:X2} C:{Registers.C:X2} D:{Registers.D:X2} E:{Registers.E:X2} H:{Registers.H:X2} L:{Registers.L:X2} SP:{Registers.SP:X4} PC:{Registers.PC:X4} PCMEM:{Mmu.Read(Registers.PC):X2},{Mmu.Read((ushort)(Registers.PC + 1)):X2},{Mmu.Read((ushort)(Registers.PC + 2)):X2},{Mmu.Read((ushort)(Registers.PC + 3)):X2}";
         logger.Log(log);
     }
 
     private bool checkInterrupt(out Interrupts interrupt)
     {
-        var IE = Bus.Read(0xFFFF);
-        var IF = Bus.Read(0xFF0F);
-        var interrupts = (IE & 0x1F) & (IF & 0x1F);
+        byte IE = Mmu.Read(0xFFFF);
+        byte IF = Mmu.Read(0xFF0F);
+        byte interrupts = (byte)((IE & 0x1F) & (IF & 0x1F));
         
-        if (interrupts != 0 && IME)
+        if (interrupts != 0 && ime)
         {
-            var mask = 0x01;
-            var temp = interrupts;
+            byte mask = 0x01;
+            byte temp = interrupts;
             int i;
             for (i = 0; i < 5; i++)
             {
                 if ((temp & 0x01) == 0x01)
                     break;
-                mask = mask << 1;
-                temp = temp >> 1;
+                mask = (byte)(mask << 1);
+                temp = (byte)(temp >> 1);
             }
-            IME = false;
-            Bus.Write8(0xFF0F, (byte)(interrupts & ~mask));
+            ime = false;
+            Mmu.Write8(0xFF0F, (byte)(interrupts & ~mask));
             interrupt = (Interrupts)i;
             return true;
         }
@@ -136,7 +134,7 @@ public class LR35902
         if (interrupt == Interrupts.JOYPAD) isStopped = false;
         
         Registers.SP -= 2;
-        Bus.Write16(Registers.SP, Registers.PC);
+        Mmu.Write16(Registers.SP, Registers.PC);
 
         Registers.PC = interrupt switch
         {
@@ -159,42 +157,42 @@ public class LR35902
     private ushort fetchR8()
     {
         // if Instruction has CB prefix or is LD r8, r8
-        var code = isCB || ((opCode & 0xC0) == 0x0) ? util.ReadCode(opCode, Masks.R8Middle) : util.ReadCode(opCode, Masks.R8Right);
-        var val = Registers.GetR8(code);
+        byte code = isCB || ((opCode & 0xC0) == 0x0) ? util.ReadCode(opCode, Masks.R8Middle) : util.ReadCode(opCode, Masks.R8Right);
+        byte val = Registers.GetR8(code);
         return val;
     }
 
     private ushort fetchR16MEM()
     {
-        var code = util.ReadCode(opCode, Masks.R16);
+        byte code = util.ReadCode(opCode, Masks.R16);
         return Registers.GetR16Mem(code);
     }
     
     private ushort fetchIMM8()
     {
-        var val = Bus.Read(Registers.PC);
+        byte val = Mmu.Read(Registers.PC);
         Registers.PC++;
         return val;
     }
 
     private ushort fetchIMM16()
     {
-        var lo = Bus.Read(Registers.PC);
+        byte lo = Mmu.Read(Registers.PC);
         Registers.PC++;
-        var hi = Bus.Read(Registers.PC);
+        byte hi = Mmu.Read(Registers.PC);
         Registers.PC++;
         return (ushort)(hi << 8 | lo);
     }
 
     private ushort fetchR16()
     {
-        var code = util.ReadCode(opCode, Masks.R16);
+        byte code = util.ReadCode(opCode, Masks.R16);
         return Registers.GetR16(code);
     }
 
     private ushort fetchR16STK()
     {
-        var code = util.ReadCode(opCode, Masks.R16);
+        byte code = util.ReadCode(opCode, Masks.R16);
         return Registers.GetR16Stk(code);
     }
     
@@ -206,41 +204,41 @@ public class LR35902
 
     private void LD_r8()
     {
-        var dest = util.ReadCode(opCode,Masks.R8Middle);
+        byte dest = util.ReadCode(opCode,Masks.R8Middle);
         Registers.SetR8(dest, (byte)fetched);
     }
 
     private void LD_r16()
     {
-        var dest = util.ReadCode(opCode,Masks.R16);
+        byte dest = util.ReadCode(opCode,Masks.R16);
         Registers.SetR16(dest, fetched);
     }
 
     private void LD_r16mem()
     {
-        Bus.Write8(fetched, Registers.A);
+        Mmu.Write8(fetched, Registers.A);
     }
 
     private void LD_a()
     {
-        Registers.A = Bus.Read(fetched);
+        Registers.A = Mmu.Read(fetched);
     }
     
     private void LD_imm16mem_SP()
     {
-        Bus.Write16(fetched, Registers.SP);
+        Mmu.Write16(fetched, Registers.SP);
     }
 
     private void LD_imm16mem_a()
     {
-        Bus.Write8(fetched, Registers.A);
+        Mmu.Write8(fetched, Registers.A);
     }
 
     private void INC_R8()
     {
-        var code = util.ReadCode(opCode, Masks.R8Middle);
-        var regVal = Registers.GetR8(code);
-        var inc = (byte)(regVal + 1);
+        byte code = util.ReadCode(opCode, Masks.R8Middle);
+        byte regVal = Registers.GetR8(code);
+        byte inc = (byte)(regVal + 1);
 
         Registers.SetFlag(Flags.Z, inc == 0);
         Registers.SetFlag(Flags.N, false);
@@ -251,15 +249,15 @@ public class LR35902
 
     private void INC_R16()
     {
-        var code = util.ReadCode(opCode, Masks.R16);
+        byte code = util.ReadCode(opCode, Masks.R16);
         Registers.SetR16(code, (ushort)(fetched + 1));
     }
 
     private void DEC_R8()
     {
-        var code = util.ReadCode(opCode, Masks.R8Middle);
-        var regVal = Registers.GetR8(code);
-        var dec = (byte)(regVal - 1);
+        byte code = util.ReadCode(opCode, Masks.R8Middle);
+        byte regVal = Registers.GetR8(code);
+        byte dec = (byte)(regVal - 1);
 
         Registers.SetFlag(Flags.Z, dec == 0);
         Registers.SetFlag(Flags.N, true);
@@ -270,26 +268,26 @@ public class LR35902
     
     private void DEC_HLmem()
     {
-        var regVal = Bus.Read(Registers.HL);
-        var dec = (byte)(regVal - 1);
+        byte regVal = Mmu.Read(Registers.HL);
+        byte dec = (byte)(regVal - 1);
 
         Registers.SetFlag(Flags.Z, dec == 0);
         Registers.SetFlag(Flags.N, true);
         Registers.SetFlag(Flags.H, (regVal & 0x0F) == 0x00);
 
-        Bus.Write8(Registers.HL, dec);
+        Mmu.Write8(Registers.HL, dec);
     }
 
     private void DEC_R16()
     {
-        var code = util.ReadCode(opCode, Masks.R16);
+        byte code = util.ReadCode(opCode, Masks.R16);
         Registers.SetR16(code, (ushort)(fetched - 1));
     }
 
     private void RLCA()
     {
-        var regA = Registers.A;
-        var bit7 = (regA & 0b10000000) == 0x80;
+        byte regA = Registers.A;
+        bool bit7 = (regA & 0b10000000) == 0x80;
         Registers.A = (byte)((regA << 1) | (bit7 ? 1 : 0));
         
         Registers.SetFlag(Flags.Z, false);
@@ -300,8 +298,8 @@ public class LR35902
 
     private void RRCA()
     {
-        var regA = Registers.A;
-        var bit0 = (regA & 1) == 1;
+        byte regA = Registers.A;
+        bool bit0 = (regA & 1) == 1;
         Registers.A = (byte)((regA >> 1) | (bit0 ? 0x80 : 0));
         
         Registers.SetFlag(Flags.Z, false);
@@ -312,8 +310,8 @@ public class LR35902
 
     private void RLA()
     {
-        var regA = Registers.A;
-        var bit7 = (regA & 0b10000000) == 0x80;
+        byte regA = Registers.A;
+        bool bit7 = (regA & 0b10000000) == 0x80;
         Registers.A = (byte)((regA << 1) | (Registers.GetFlag(Flags.C) ? 1 : 0));
         
         Registers.SetFlag(Flags.Z, false);
@@ -324,8 +322,8 @@ public class LR35902
 
     private void RRA()
     {
-        var regA = Registers.A;
-        var bit0 = (regA & 1) == 1;
+        byte regA = Registers.A;
+        bool bit0 = (regA & 1) == 1;
         Registers.A = (byte)((regA >> 1) | (Registers.GetFlag(Flags.C) ? 0x80 : 0));
         
         Registers.SetFlag(Flags.Z, false);
@@ -384,18 +382,18 @@ public class LR35902
 
     private void JR()
     {
-        var signedOffset = (sbyte)fetched;
+        sbyte signedOffset = (sbyte)fetched;
         Registers.PC = (ushort)(Registers.PC + signedOffset);
     }
 
     private void JR_cond()
     {
-        var code = util.ReadCode(opCode, Masks.Cond);
-        var cond = Registers.GetCond(code);
+        byte code = util.ReadCode(opCode, Masks.Cond);
+        bool cond = Registers.GetCond(code);
 
         if (cond)
         {
-            var signedOffset = (sbyte)fetched;
+            sbyte signedOffset = (sbyte)fetched;
             Registers.PC = (ushort)(Registers.PC + signedOffset);
             withBranch = true;
         }
@@ -404,16 +402,16 @@ public class LR35902
     private void STOP()
     {
         isStopped = true;
-        Bus.Write8(0xFF04, 0); // Stop DIV Timer
+        Mmu.Write8(0xFF04, 0); // Stop DIV Timer
     }
 
     private void HALT()
     {
         isHalted = true;
         
-        var IE = Bus.Read(0xFFFF);
-        var IF = Bus.Read(0xFF0F);
-        if (!IME && (IE & IF & 0x1F) != 0) // Hardware Bug
+        byte IE = Mmu.Read(0xFFFF);
+        byte IF = Mmu.Read(0xFF0F);
+        if (!ime && (IE & IF & 0x1F) != 0) // Hardware Bug
         {
             isHalted = false;
             Registers.PC--;
@@ -422,8 +420,8 @@ public class LR35902
 
     private void ADD()
     {
-        var regA = Registers.A;
-        var result = (byte)(regA + fetched);
+        byte regA = Registers.A;
+        byte result = (byte)(regA + fetched);
         
         Registers.A = result;
         
@@ -435,8 +433,8 @@ public class LR35902
 
     private void ADD_HL()
     {
-        var regHL = Registers.HL;
-        var result = regHL + fetched;
+        ushort regHL = Registers.HL;
+        int result = regHL + fetched;
         
         Registers.HL = (ushort)result;
         
@@ -447,9 +445,9 @@ public class LR35902
 
     private void ADD_SP()
     {
-        var regSP = Registers.SP;
-        var signedOffset = (sbyte)fetched;
-        var result = (ushort)(Registers.SP + (sbyte)fetched);
+        ushort regSP = Registers.SP;
+        sbyte signedOffset = (sbyte)fetched;
+        ushort result = (ushort)(Registers.SP + (sbyte)fetched);
         
         Registers.SP = result;
         
@@ -461,9 +459,9 @@ public class LR35902
 
     private void ADC()
     {
-        var regA = Registers.A;
-        var cFlagValue = Registers.GetFlag(Flags.C) ? 1 : 0;
-        var result = regA + fetched + cFlagValue;
+        byte regA = Registers.A;
+        int cFlagValue = Registers.GetFlag(Flags.C) ? 1 : 0;
+        int result = regA + fetched + cFlagValue;
         
         Registers.A = (byte)result;
         
@@ -475,8 +473,8 @@ public class LR35902
 
     private void SUB()
     {
-        var regA = Registers.A;
-        var result = (byte)(regA - fetched);
+        byte regA = Registers.A;
+        byte result = (byte)(regA - fetched);
         
         Registers.A = result;
         
@@ -488,9 +486,9 @@ public class LR35902
 
     private void SBC()
     {
-        var regA = Registers.A;
-        var cFlagValue = Registers.GetFlag(Flags.C) ? 1 : 0;
-        var result = (byte)(regA - fetched - cFlagValue);
+        byte regA = Registers.A;
+        int cFlagValue = Registers.GetFlag(Flags.C) ? 1 : 0;
+        byte result = (byte)(regA - fetched - cFlagValue);
         
         Registers.A = result;
         
@@ -502,7 +500,7 @@ public class LR35902
 
     private void AND()
     {
-        var result = Registers.A & fetched;
+        int result = Registers.A & fetched;
         Registers.A = (byte)result;
         
         Registers.SetFlag(Flags.Z, result == 0);
@@ -513,7 +511,7 @@ public class LR35902
 
     private void XOR()
     {
-        var result = Registers.A ^ fetched;
+        int result = Registers.A ^ fetched;
         Registers.A = (byte)result;
         
         Registers.SetFlag(Flags.Z, result == 0);
@@ -524,7 +522,7 @@ public class LR35902
 
     private void OR()
     {
-        var result = Registers.A | fetched;
+        int result = Registers.A | fetched;
         Registers.A = (byte)result;
         
         Registers.SetFlag(Flags.Z, result == 0);
@@ -543,9 +541,9 @@ public class LR35902
 
     private void RET()
     {
-        var lo = Bus.Read(Registers.SP);
+        byte lo = Mmu.Read(Registers.SP);
         Registers.SP++;
-        var hi = Bus.Read(Registers.SP);
+        byte hi = Mmu.Read(Registers.SP);
         Registers.SP++;
 
         var val = (ushort)((hi << 8) | lo);
@@ -555,17 +553,17 @@ public class LR35902
 
     private void RET_cond()
     {
-        var code = util.ReadCode(opCode, Masks.Cond);
-        var cond = Registers.GetCond(code);
+        byte code = util.ReadCode(opCode, Masks.Cond);
+        bool cond = Registers.GetCond(code);
 
         if (cond)
         {
-            var lo = Bus.Read(Registers.SP);
+            byte lo = Mmu.Read(Registers.SP);
             Registers.SP++;
-            var hi = Bus.Read(Registers.SP);
+            byte hi = Mmu.Read(Registers.SP);
             Registers.SP++;
 
-            var val = (ushort)((hi << 8) | lo);
+            ushort val = (ushort)((hi << 8) | lo);
 
             Registers.PC = val;
 
@@ -575,15 +573,15 @@ public class LR35902
 
     private void RETI()
     {
-        var lo = Bus.Read(Registers.SP);
+        byte lo = Mmu.Read(Registers.SP);
         Registers.SP++;
-        var hi = Bus.Read(Registers.SP);
+        byte hi = Mmu.Read(Registers.SP);
         Registers.SP++;
 
-        var val = (ushort)((hi << 8) | lo);
+        ushort val = (ushort)((hi << 8) | lo);
 
         Registers.PC = val;
-        IME = true;
+        ime = true;
     }
 
     private void JP_imm16()
@@ -593,8 +591,8 @@ public class LR35902
     
     private void JP_cond()
     {
-        var code = util.ReadCode(opCode, Masks.Cond);
-        var cond = Registers.GetCond(code);
+        byte code = util.ReadCode(opCode, Masks.Cond);
+        bool cond = Registers.GetCond(code);
         if (cond)
         {
             Registers.PC = fetched;
@@ -610,18 +608,18 @@ public class LR35902
     private void CALL()
     {
         Registers.SP -= 2;
-        Bus.Write16(Registers.SP, Registers.PC);
+        Mmu.Write16(Registers.SP, Registers.PC);
         Registers.PC = fetched;
     }
 
     private void CALL_cond()
     {
-        var code = util.ReadCode(opCode, Masks.Cond);
-        var cond = Registers.GetCond(code);
+        byte code = util.ReadCode(opCode, Masks.Cond);
+        bool cond = Registers.GetCond(code);
         if (cond)
         {
             Registers.SP -= 2;
-            Bus.Write16(Registers.SP, Registers.PC);
+            Mmu.Write16(Registers.SP, Registers.PC);
             Registers.PC = fetched;
         }
     }
@@ -629,22 +627,22 @@ public class LR35902
     private void RST()
     {
         Registers.SP -= 2;
-        Bus.Write16(Registers.SP, Registers.PC);
+        Mmu.Write16(Registers.SP, Registers.PC);
         
-        var targetAddress = util.ReadCode(opCode, Masks.Target) * 8;
+        int targetAddress = util.ReadCode(opCode, Masks.Target) * 8;
         Registers.PC = (ushort)targetAddress;
     }
 
     private void POP()
     {
-        var code = util.ReadCode(opCode, Masks.R16);
+        byte code = util.ReadCode(opCode, Masks.R16);
 
-        var lo = Bus.Read(Registers.SP);
+        byte lo = Mmu.Read(Registers.SP);
         Registers.SP++;
-        var hi = Bus.Read(Registers.SP);
+        byte hi = Mmu.Read(Registers.SP);
         Registers.SP++;
 
-        var val = (ushort)((hi << 8) | lo);
+        ushort val = (ushort)((hi << 8) | lo);
         
         Registers.SetR16Stk(code, val);
     }
@@ -652,38 +650,38 @@ public class LR35902
     private void PUSH()
     {
         Registers.SP -= 2;
-        Bus.Write16(Registers.SP, fetched);
+        Mmu.Write16(Registers.SP, fetched);
     }
 
     private void LDH_imm8mem()
     {
-        var highAddress = (ushort)(fetched + 0xFF00);
-        Bus.Write8(highAddress, Registers.A);
+        ushort highAddress = (ushort)(fetched + 0xFF00);
+        Mmu.Write8(highAddress, Registers.A);
     }
 
     private void LDH_cmem()
     {
-        var highAddress = (ushort)(Registers.C + 0xFF00);
-        Bus.Write8(highAddress, Registers.A);
+        ushort highAddress = (ushort)(Registers.C + 0xFF00);
+        Mmu.Write8(highAddress, Registers.A);
     }
 
     private void LDH_a_cmem()
     {
-        var highAddress = (ushort)(Registers.C + 0xFF00);
-        Registers.A = Bus.Read(highAddress);
+        ushort highAddress = (ushort)(Registers.C + 0xFF00);
+        Registers.A = Mmu.Read(highAddress);
     }
     
     private void LDH_a_imm8mem()
     {
-        var highAddress = (ushort)(fetched + 0xFF00);
-        Registers.A = Bus.Read(highAddress);
+        ushort highAddress = (ushort)(fetched + 0xFF00);
+        Registers.A = Mmu.Read(highAddress);
     }
 
     private void LD_HL_SP_imm8()
     {
-        var regSP = Registers.SP;
-        var signed = (sbyte)fetched;
-        var result = (ushort)(Registers.SP + signed);
+        ushort regSP = Registers.SP;
+        sbyte signed = (sbyte)fetched;
+        ushort result = (ushort)(Registers.SP + signed);
         
         Registers.HL = result;
         
@@ -700,12 +698,12 @@ public class LR35902
 
     private void DI()
     {
-        IME = false;
+        ime = false;
     }
 
     private void EI()
     {
-        IME = true;
+        ime = true;
     }
     
     private void PREFIX_CB()
@@ -717,11 +715,11 @@ public class LR35902
 
     private void RLC()
     {
-        var code = util.ReadCode(opCode, Masks.R8Right);
-        var val = Registers.GetR8(code);
-        var bit7 = (val & 0b10000000) == 0x80;
+        byte code = util.ReadCode(opCode, Masks.R8Right);
+        byte val = Registers.GetR8(code);
+        bool bit7 = (val & 0b10000000) == 0x80;
 
-        var result = (byte)((val << 1) | (bit7 ? 1 : 0));
+        byte result = (byte)((val << 1) | (bit7 ? 1 : 0));
         Registers.SetR8(code, result);
         
         Registers.SetFlag(Flags.Z, result == 0);
@@ -734,11 +732,11 @@ public class LR35902
 
     private void RRC()
     {
-        var code = util.ReadCode(opCode, Masks.R8Right);
-        var val = Registers.GetR8(code);
-        var bit0 = (val & 1) == 1;
+        byte code = util.ReadCode(opCode, Masks.R8Right);
+        byte val = Registers.GetR8(code);
+        bool bit0 = (val & 1) == 1;
         
-        var result = (byte)((val >> 1) | (bit0 ? 0x80 : 0));
+        byte result = (byte)((val >> 1) | (bit0 ? 0x80 : 0));
         Registers.SetR8(code, result);
         
         Registers.SetFlag(Flags.Z, result == 0);
@@ -751,11 +749,11 @@ public class LR35902
 
     private void RL()
     {
-        var code = util.ReadCode(opCode, Masks.R8Right);
-        var val = Registers.GetR8(code);
-        var bit7 = (val & 0b10000000) == 0x80;
+        byte code = util.ReadCode(opCode, Masks.R8Right);
+        byte val = Registers.GetR8(code);
+        bool bit7 = (val & 0b10000000) == 0x80;
         
-        var result = (byte)((val << 1) | (Registers.GetFlag(Flags.C) ? 1 : 0));
+        byte result = (byte)((val << 1) | (Registers.GetFlag(Flags.C) ? 1 : 0));
         Registers.SetR8(code, result);
         
         Registers.SetFlag(Flags.Z, result == 0);
@@ -768,11 +766,11 @@ public class LR35902
 
     private void RR()
     {
-        var code = util.ReadCode(opCode, Masks.R8Right);
-        var val = Registers.GetR8(code);
-        var bit0 = (val & 1) == 1;
+        byte code = util.ReadCode(opCode, Masks.R8Right);
+        byte val = Registers.GetR8(code);
+        bool bit0 = (val & 1) == 1;
 
-        var result = (byte)((val >> 1) | (Registers.GetFlag(Flags.C) ? 0x80 : 0));
+        byte result = (byte)((val >> 1) | (Registers.GetFlag(Flags.C) ? 0x80 : 0));
         Registers.SetR8(code, result);
         
         Registers.SetFlag(Flags.Z, result == 0);
@@ -785,11 +783,11 @@ public class LR35902
 
     private void SLA()
     {
-        var code = util.ReadCode(opCode, Masks.R8Right);
-        var val = Registers.GetR8(code);
-        var bit7 = (val & 0b10000000) == 0x80;
+        byte code = util.ReadCode(opCode, Masks.R8Right);
+        byte val = Registers.GetR8(code);
+        bool bit7 = (val & 0b10000000) == 0x80;
 
-        var result = (byte)(val << 1);
+        byte result = (byte)(val << 1);
         Registers.SetR8(code, result);
         
         Registers.SetFlag(Flags.Z, result == 0);
@@ -802,12 +800,12 @@ public class LR35902
 
     private void SRA()
     {
-        var code = util.ReadCode(opCode, Masks.R8Right);
-        var val = Registers.GetR8(code);
-        var bit0 = (val & 1) == 1;
-        var bit7 = (val & 0b10000000) == 0x80;
+        byte code = util.ReadCode(opCode, Masks.R8Right);
+        byte val = Registers.GetR8(code);
+        bool bit0 = (val & 1) == 1;
+        bool bit7 = (val & 0b10000000) == 0x80;
 
-        var result = (byte)((val >> 1) | (bit7 ? 0x80 : 0));
+        byte result = (byte)((val >> 1) | (bit7 ? 0x80 : 0));
         Registers.SetR8(code, result);
         
         Registers.SetFlag(Flags.Z, result == 0);
@@ -820,12 +818,12 @@ public class LR35902
 
     private void SWAP()
     {
-        var code = util.ReadCode(opCode, Masks.R8Right);
-        var val = Registers.GetR8(code);
+        byte code = util.ReadCode(opCode, Masks.R8Right);
+        byte val = Registers.GetR8(code);
 
-        var hi = (byte)((val & 0xF0) >> 4);
-        var lo = (byte)(val & 0x0F);
-        var result = (byte)((lo << 4) | hi);
+        byte hi = (byte)((val & 0xF0) >> 4);
+        byte lo = (byte)(val & 0x0F);
+        byte result = (byte)((lo << 4) | hi);
         Registers.SetR8(code, result);
         
         Registers.SetFlag(Flags.Z, result == 0);
@@ -838,11 +836,11 @@ public class LR35902
 
     private void SRL()
     {
-        var code = util.ReadCode(opCode, Masks.R8Right);
-        var val = Registers.GetR8(code);
-        var bit0 = (val & 1) == 1;
+        byte code = util.ReadCode(opCode, Masks.R8Right);
+        byte val = Registers.GetR8(code);
+        bool bit0 = (val & 1) == 1;
 
-        var result = (byte)(val >> 1);
+        byte result = (byte)(val >> 1);
         Registers.SetR8(code, result);
         
         Registers.SetFlag(Flags.Z, result == 0);
@@ -855,9 +853,8 @@ public class LR35902
 
     private void BIT()
     {
-        var index = util.ReadCode(opCode, Masks.U3);
-        
-        var isSet = ((fetched >> index) & 0x01) == 1;
+        byte index = util.ReadCode(opCode, Masks.U3);
+        bool isSet = ((fetched >> index) & 0x01) == 1;
         
         Registers.SetFlag(Flags.Z, !isSet);
         Registers.SetFlag(Flags.N, false);
@@ -868,11 +865,11 @@ public class LR35902
 
     private void RES()
     {
-        var code = util.ReadCode(opCode, Masks.R8Right);
-        var val = Registers.GetR8(code);
-        var index = util.ReadCode(opCode, Masks.U3);
+        byte code = util.ReadCode(opCode, Masks.R8Right);
+        byte val = Registers.GetR8(code);
+        byte index = util.ReadCode(opCode, Masks.U3);
 
-        var newVal = (byte)(~(0x01 << index) & val);
+        byte newVal = (byte)(~(0x01 << index) & val);
         
         Registers.SetR8(code, newVal);
         
@@ -881,11 +878,11 @@ public class LR35902
 
     private void SET()
     {
-        var code = util.ReadCode(opCode, Masks.R8Right);
-        var val = Registers.GetR8(code);
-        var index = util.ReadCode(opCode, Masks.U3);
+        byte code = util.ReadCode(opCode, Masks.R8Right);
+        byte val = Registers.GetR8(code);
+        byte index = util.ReadCode(opCode, Masks.U3);
 
-        var newVal = (byte)((0x01 << index) | val);
+        byte newVal = (byte)((0x01 << index) | val);
         
         Registers.SetR8(code, newVal);
         

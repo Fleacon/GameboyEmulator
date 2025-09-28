@@ -71,7 +71,7 @@ public class Registers
             3 => E,
             4 => H,
             5 => L,
-            6 => cpu.Bus.Read(HL),
+            6 => cpu.Mmu.Read(HL),
             7 => A,
             _ => throw new ArgumentOutOfRangeException(nameof(code), $"Unknown register code: {code}")
         };
@@ -87,7 +87,7 @@ public class Registers
             case 3: E = value; break;
             case 4: H = value; break;
             case 5: L = value; break;
-            case 6: cpu.Bus.Write8(HL, value); break;
+            case 6: cpu.Mmu.Write8(HL, value); break;
             case 7: A = value; break;
             default: throw new ArgumentOutOfRangeException(nameof(code), $"Unknown register code: {code}");
         }

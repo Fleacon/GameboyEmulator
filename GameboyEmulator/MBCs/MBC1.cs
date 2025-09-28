@@ -17,7 +17,7 @@ public class MBC1 : IMapper
             {
                 return readRomBank(c, 0, addr);
             }
-            else if (mode == 1)
+            if (mode == 1)
             {
                 byte bank = (byte)(bank2 << 5);
                 int bankMask = (1 << c.RomBankNumBits) - 1;

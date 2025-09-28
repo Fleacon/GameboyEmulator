@@ -1,6 +1,6 @@
 namespace GameboyEmulator;
 
-public enum Interrupts
+public enum Interrupts : byte
 {
     NONE = 0,
     VBLANK = 0b00001,

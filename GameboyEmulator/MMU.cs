@@ -2,7 +2,7 @@ using Timer = GameboyEmulator.IO.Timer;
 
 namespace GameboyEmulator;
 
-public class Bus
+public class MMU
 {
     private Cartridge cartridge;
     private byte[] VRAM;
@@ -14,7 +14,7 @@ public class Bus
 
     private byte lastByte; // TODO: When the CPU tries to read from unmapped addresses, it should return the last Byte stored in the bus 
 
-    public Bus()
+    public MMU()
     {
         VRAM = new byte[8192]; // 8 KiB
         WRAM = new byte[8192]; // 8 KiB
@@ -45,7 +45,6 @@ public class Bus
     {
         // Write the low byte to the current address
         Write8(addr, (byte)(data & 0xFF));
-
         // Write the high byte to the next address
         Write8((ushort)(addr + 1), (byte)(data >> 8));
     }

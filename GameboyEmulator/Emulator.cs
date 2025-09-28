@@ -6,13 +6,13 @@ public class Emulator
 {
     private const int MAXCYCLES = 69905; // cylesPerSec / Frames | 4194304 / 60
     public LR35902 Cpu;
-    public Bus Bus;
+    public MMU Mmu;
     public IO.IO Io;
 
     public Emulator()
     {
-        Bus = new ();
-        Cpu = new (Bus);
+        Mmu = new ();
+        Cpu = new (Mmu);
     }
     
     public void Update()
@@ -22,7 +22,7 @@ public class Emulator
         while (cycles < MAXCYCLES)
         {
             cycles += Cpu.Execute();
-            Bus.IOregister.UpdateTimers(cycles);
+            Mmu.IOregister.UpdateTimers(cycles);
         }
     }
 
@@ -37,7 +37,7 @@ public class Emulator
         
         var cartridge = new Cartridge();
         cartridge.LoadGame(rom);
-        Bus.InsertCartridge(cartridge);
+        Mmu.InsertCartridge(cartridge);
         cartridge.PrintInfo();
     }
 }
